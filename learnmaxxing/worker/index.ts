@@ -2,9 +2,11 @@ import { Hono } from "hono";
 import { basicAuth } from "hono/basic-auth";
 import type { D1Database } from "@cloudflare/workers-types"
 import { createRepositories } from "../db";
+import { GoogleGenAI } from "@google/genai";
 import quizRouter from "./quiz";
 export type WorkerBindings = {
   DB: D1Database
+  GEMINI_API_KEY: string;
 }
 
 const app = new Hono<{ Bindings: WorkerBindings }>()
@@ -158,11 +160,14 @@ app.post('/api/topics/failure-percentage', async (c) => {
   const data: Array<{ questionId: number; success: boolean; topicId: number }> = await c.req.json();
   const repos = createRepositories(c.env.DB);
 
-  const stats: Record<number, { total: number; failed: number }> = {};
+  const stats: Record<number, { total: number; failed: number; badQuestions: number[] }> = {};
   for (const q of data) {
-    if (!stats[q.topicId]) stats[q.topicId] = { total: 0, failed: 0 };
+    if (!stats[q.topicId]) stats[q.topicId] = { total: 0, failed: 0, badQuestions: [] };
     stats[q.topicId].total += 1;
-    if (!q.success) stats[q.topicId].failed += 1;
+    if (!q.success) {
+      stats[q.topicId].failed += 1;
+      stats[q.topicId].badQuestions.push(q.questionId);
+    }
   }
 
   const quizIds = Object.keys(stats).map(Number);
@@ -178,13 +183,59 @@ app.post('/api/topics/failure-percentage', async (c) => {
     })
   );
 
-  const result = Object.entries(stats).map(([quizId, { total, failed }]) => ({
-    topic: quizIdToTitle[Number(quizId)] || `Unknown (${quizId})`,
-    failurePercentage: total > 0 ? (failed / total) * 100 : 0
+  // Prepare Gemini AI
+  const apiKey = c.env.GEMINI_API_KEY;
+  const ai = new GoogleGenAI({ apiKey });
+
+  // For each topic, get feedback from Gemini and gather references for bad questions
+  const result = await Promise.all(Object.entries(stats).map(async ([quizId, { total, failed, badQuestions }]) => {
+    const title = quizIdToTitle[Number(quizId)] || `Unknown (${quizId})`;
+    const failurePercentage = total > 0 ? (failed / total) * 100 : 0;
+
+    let feedback = "";
+    if (total > 0) {
+      const prompt = `The topic "${title}" has a failure rate of ${failurePercentage.toFixed(1)}%. In one or two sentences, what is the most important thing you should focus on to improve? Answer as if speaking directly to the user. Be concise.`;
+      try {
+        const feedbackResponse = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: prompt,
+        });
+        feedback = (feedbackResponse.text || "")
+          .replace(/[\n\r]+/g, " ")
+          .replace(/["']/g, "")
+          .replace(/\*/g, "")
+          .trim();
+      } catch (err) {
+        feedback = "Could not generate feedback.";
+      }
+    }
+
+    // Gather references and paragraphs for bad questions
+    const references: Array<{ questionId: number; referenceTitle: string; paragraph: string }> = [];
+    for (const questionId of badQuestions) {
+      // Get all reference-question links for this question
+      const refQuestions = await repos.referenceQuestions.findByQuestionId(questionId);
+      for (const rq of refQuestions) {
+        // Get the reference title
+        const ref = await repos.references.findById(rq.reference_id);
+        references.push({
+          questionId,
+          referenceTitle: ref?.title || "Unknown",
+          paragraph: rq.paragraph
+        });
+      }
+    }
+
+    return {
+      topic: title,
+      failurePercentage,
+      feedback,
+      references // array of { questionId, referenceTitle, paragraph }
+    };
   }));
 
   return c.json(result);
-})
+});
 
 export default {
   fetch: app.fetch
