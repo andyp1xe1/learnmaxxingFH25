@@ -1,7 +1,8 @@
 
 import { Brain} from 'lucide-react';
-
-function Navigation(){
+import { useNavigate } from 'react-router-dom';
+function Navigation() {
+    const navigate = useNavigate();
     return (
         <nav className="px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center space-x-2">
@@ -14,10 +15,10 @@ function Navigation(){
         </div>
         
         <div className="flex items-center space-x-4">
-            <button className="font-inter px-6 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors">
+            <button onClick={() => navigate('/login')} className="font-inter px-6 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors">
             Login
             </button>
-            <button className="font-inter px-6 py-2 bg-[linear-gradient(to_left,#6a29ab,#fca95b)] text-white rounded-lg hover:from-purple-700 hover:to-blue-700 font-medium transition-all transform hover:scale-105 shadow-lg">
+            <button onClick={() => navigate('/signup')} className="font-inter px-6 py-2 bg-[linear-gradient(to_left,#6a29ab,#fca95b)] text-white rounded-lg hover:from-purple-700 hover:to-blue-700 font-medium transition-all transform hover:scale-105 shadow-lg">
             Sign Up
             </button>
         </div>
