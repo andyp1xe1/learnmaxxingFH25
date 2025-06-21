@@ -4,16 +4,16 @@ import type { Quiz, NewQuiz } from "./types";
 export class QuizRepository extends BaseRepository {
   /**
    * Create a new quiz
-   */
-  async create(quizData: NewQuiz): Promise<Quiz> {
+   */  async create(quizData: NewQuiz): Promise<Quiz> {
     const query = `
-      INSERT INTO quiz (title, description)
-      VALUES (?, ?)
+      INSERT INTO quiz (title, description, group_id)
+      VALUES (?, ?, ?)
     `;
     
     const id = await this.insert(query, [
       quizData.title,
-      quizData.description || null
+      quizData.description || null,
+      quizData.group_id
     ]);
     
     return this.findById(id) as Promise<Quiz>;

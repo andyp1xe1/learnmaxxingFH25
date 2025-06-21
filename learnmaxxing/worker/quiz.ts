@@ -52,8 +52,14 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
     
     if (!topicsText) {
       return c.json({ error: "No topics generated" }, 500);
+    }    const topics: string[] = JSON.parse(topicsText);
+      // Create or find a group for these quizzes based on the prompt
+    let group = await repos.groups.findByName(prompt.substring(0, 100)); // Use first 100 chars of prompt as group name
+    if (!group) {
+      group = await repos.groups.create({
+        name: prompt.substring(0, 100)
+      });
     }
-    const topics: string[] = JSON.parse(topicsText);
     
     const quizzes: any[] = [];
 
@@ -95,12 +101,12 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
         },
       });
 
-      const quizQuestions: QuizQuestion[] = JSON.parse(quizResponse.text || "[]");
-
-      // 4. Save new quiz to DB (implement saveQuiz)
+      const quizQuestions: QuizQuestion[] = JSON.parse(quizResponse.text || "[]");      // 4. Save new quiz to DB with group reference
       const quiz = await repos.quizzes.create({
         title: topic,
-        description: `Quiz on the topic: ${topic}`})
+        description: `Quiz on the topic: ${topic}`,
+        group_id: group.id
+      })
       
       const referenceMap = new Map<string, number>();
       for (const q of quizQuestions) {
