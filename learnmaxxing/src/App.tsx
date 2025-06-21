@@ -6,6 +6,8 @@ import { BrowserRouter as Router,Routes,Route} from 'react-router-dom';
 import LandingPage from './LandingPage';
 import LogIn from './LogIn';
 import SignUp from './SignUp';
+import FileUploadDemo from './FileUploadDemo';
+
 type Credentials = {
   username: string;
   password: string;
@@ -27,6 +29,7 @@ function App() {
           <Route path="/login" element={<LogIn onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignUp onSignup={handleSignup} />} />
           <Route path="/" element={<LandingPage />}/>
+          <Route path="/upload-demo" element={<FileUploadDemo />} />
         </Routes>
       </Router>
       </div>

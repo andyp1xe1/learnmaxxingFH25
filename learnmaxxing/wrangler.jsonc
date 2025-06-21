@@ -5,7 +5,8 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "learnmaxxing",
-	"main": "worker/index.ts",	"compatibility_date": "2025-06-20",
+	"main": "worker/index.ts",
+	"compatibility_date": "2025-06-20",
 	"observability": {
 		"enabled": true
 	},
@@ -40,7 +41,11 @@
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
 	 */
+<<<<<<< HEAD
 	 "assets": { "directory": "./public/", "binding": "ASSETS" }
+=======
+	"assets": { "directory": "./public/", "binding": "ASSETS" },
+>>>>>>> ab41b2e (feat: Add drag-and-drop file upload modal with Tailwind CSS v4)
 
 	/**
 	 * Service Bindings (communicate between multiple Workers)
