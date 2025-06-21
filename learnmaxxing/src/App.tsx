@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import cloudflareLogo from './assets/Cloudflare_Logo.svg'
 import './App.css'
 import QuizGenerator from './components/QuizGenerator'
+import PDFUploader from './components/PDFUploader'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -21,8 +22,9 @@ function App() {
         <a href='https://workers.cloudflare.com/' target='_blank'>
           <img src={cloudflareLogo} className='logo cloudflare' alt='Cloudflare logo' />
         </a>
-      </div>
-      <h1>LearnMaxxing Quiz Generator</h1>
+      </div>      <h1>LearnMaxxing Quiz Generator</h1>
+
+      <PDFUploader />
 
       <QuizGenerator />
 
