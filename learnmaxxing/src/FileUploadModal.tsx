@@ -152,12 +152,6 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 font-playfair">Upload Documents</h2>
-          <button 
-            className="text-2xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded-md transition-all duration-200"
-            onClick={onClose}
-          >
-            ×
-          </button>
         </div>
 
         {/* Modal Body */}
@@ -202,7 +196,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
                 Files to upload ({uploadedFiles.length})
               </h3>
               {uploadedFiles.map((uploadedFile) => (
-                <div key={uploadedFile.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2 relative hover:bg-gray-100 transition-colors duration-200">
+                <div key={uploadedFile.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 pr-10 mb-2 relative hover:bg-gray-100 transition-colors duration-200">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl flex-shrink-0">
                       {getFileIcon(uploadedFile.file.type)}
@@ -215,9 +209,6 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
                         {(uploadedFile.file.size / 1024).toFixed(1)} KB
                       </div>
                     </div>
-                    <span className="text-xl flex-shrink-0">
-                      {getStatusIcon(uploadedFile.status)}
-                    </span>
                   </div>
                   
                   {uploadedFile.status === 'uploading' && (
@@ -234,7 +225,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
                   )}
                   
                   <button 
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm flex items-center justify-center hover:bg-red-600 hover:scale-110 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm flex items-center justify-center hover:bg-red-600 hover:scale-110 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-10"
                     onClick={() => removeFile(uploadedFile.id)}
                     disabled={uploadedFile.status === 'uploading'}
                   >
