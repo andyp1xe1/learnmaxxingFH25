@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import cloudflareLogo from './assets/Cloudflare_Logo.svg'
 import './App.css'
+import QuizGenerator from './components/QuizGenerator'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -21,7 +22,10 @@ function App() {
           <img src={cloudflareLogo} className='logo cloudflare' alt='Cloudflare logo' />
         </a>
       </div>
-      <h1>Vite + React + Cloudflare</h1>
+      <h1>LearnMaxxing Quiz Generator</h1>
+
+      <QuizGenerator />
+
       <div className='card'>
         <button
           onClick={() => setCount((count) => count + 1)}

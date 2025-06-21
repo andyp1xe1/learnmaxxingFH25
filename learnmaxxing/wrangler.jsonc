@@ -5,11 +5,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "learnmaxxing",
-	"main": "worker/index.ts",
-	"compatibility_date": "2025-06-20",
-	"assets": {
-		"not_found_handling": "single-page-application"
-	},
+	"main": "worker/index.ts",	"compatibility_date": "2025-06-20",
 	"observability": {
 		"enabled": true
 	},
@@ -31,23 +27,20 @@
 			 "database_name": "learnmaxxdb",
 			 "database_id": "4af0230a-14c2-4226-a9a6-95e39b3e60fe"
 		 }
-	 ],
-
-	/**
+	 ],	/**
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
-	// "vars": { "MY_VARIABLE": "production_value" },
+	"vars": {},
 	/**
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
-
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
 	 */
-	 "assets": { "directory": "./public/", "binding": "ASSETS" },
+	 "assets": { "directory": "./public/", "binding": "ASSETS" }
 
 	/**
 	 * Service Bindings (communicate between multiple Workers)
