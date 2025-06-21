@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Brain } from 'lucide-react';
+import BackButton from './BackButton';
 type SignUpProps = {
     onSignup: (credentials: { username: string; password: string }) => void;
     };
@@ -18,25 +20,25 @@ function SignUp({ onSignup }:SignUpProps){
     };
 
     return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-200 via-purple-200 to-purple-300 flex items-center justify-center p-4">
+    <>
+    <BackButton to="/" />
+    <div className="rounded-xl w-full h-screen flex items-center justify-center bg-gradient-to-br from-orange-200 via-pink-200 to-purple-300">
     <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
         {/* Logo */}
-        <div className="flex items-center justify-center mb-8">
-        <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-orange-400 rounded-full flex items-center justify-center mr-3">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 11 5.16-1.261 9-5.45 9-11V7l-10-5z"/>
-            </svg>
+        <div className="flex items-center justify-center space-x-2">
+            <div className="w-10 h-10 bg-[linear-gradient(to_right,#6a29ab,#fca95b)] rounded-xl flex items-center justify-center">
+            <Brain className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-400 bg-clip-text text-transparent font-playfair">
+            <span className="font-playfair text-2xl font-bold bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent">
             LEARNMAXXING
             </span>
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-playfair font-bold text-center mb-2 bg-gradient-to-r from-purple-600 to-orange-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-playfair font-bold text-center mb-2 bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent mt-8">
             Join Us Today
         </h1>
-        <p className="text-gray-600 text-center mb-8 font-inter">
+        <p className="text-gray-600 text-center mb-8 font-inter mb-8">
             Create your account and start maximizing your learning potential
         </p>
 
@@ -58,7 +60,7 @@ function SignUp({ onSignup }:SignUpProps){
             </div>
 
             <div>
-            <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-2 font-inter">
+            <label htmlFor="signup-password" className=" block text-sm font-medium text-gray-700 mb-2 font-inter">
                 Password
             </label>
             <input
@@ -66,7 +68,7 @@ function SignUp({ onSignup }:SignUpProps){
                 id="signup-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter"
+                className="mb-5 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter"
                 placeholder="Create a secure password"
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
             />
@@ -74,7 +76,7 @@ function SignUp({ onSignup }:SignUpProps){
 
             <button
             onClick={handleSubmit}
-            className="w-full bg-gradient-to-r from-purple-600 to-orange-400 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter"
+            className="w-full bg-[linear-gradient(to_right,#6a29ab,#fca95b)] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter"
             >
             Create Account
             </button>
@@ -86,14 +88,15 @@ function SignUp({ onSignup }:SignUpProps){
             Already have an account?{' '}
             <button
                 onClick={() => navigate('/login')}
-                className="text-purple-600 hover:text-purple-700 font-semibold transition-colors duration-200"
+                className="hover:text-purple-700 font-semibold transition-colors duration-200"
             >
                 Log in
             </button>
             </p>
         </div>
         </div>
-    </div>
+            </div>
+    </>
 );
 };
 
