@@ -22,7 +22,7 @@ function SignUp({ onSignup }:SignUpProps){
     return (
     <>
     <BackButton to="/" />
-    <div className="rounded-xl w-full h-screen flex items-center justify-center bg-gradient-to-br from-orange-200 via-pink-200 to-purple-300">
+    <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-orange-200 via-pink-200 to-purple-300">
     <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2">

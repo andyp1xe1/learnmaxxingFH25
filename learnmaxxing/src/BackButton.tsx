@@ -12,7 +12,7 @@ const BackButton: React.FC<BackButtonProps> = ({ to }) => {
     return (
     <button
         onClick={() => navigate(to)}
-        className="font-inter font-bold ml-20 flex items-center space-x-2 text-gray-600 hover:text-purple-800 font-medium text-sm absolute top-4 left-4"
+        className="font-inter font-bold ml-5 flex items-center space-x-2 text-gray-600 hover:text-purple-800 font-medium text-sm absolute top-4 left-4"
     >
         <ArrowLeft className="w-5 h-5" />
         <span>Back</span>

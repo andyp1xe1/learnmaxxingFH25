@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import BackButton from './BackButton';
 
-
-function LearnMode({ onBack = () => {} }){
+function LearnMode(){
     const [isFlipped, setIsFlipped] = useState(false);
     const [currentCard, setCurrentCard] = useState(0);
 
@@ -35,19 +35,11 @@ function LearnMode({ onBack = () => {} }){
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-200 via-purple-200 to-purple-300 p-4">
+        <div className=" min-h-screen bg-gradient-to-br from-orange-200 via-purple-200 to-purple-300 p-4">
             <div className="max-w-4xl mx-auto">
         {/* Header */}
             <div className="flex items-center justify-between mb-8">
-            <button
-            onClick={onBack}
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-            >
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
-            </svg>
-            Back to Modes
-            </button>
+            <BackButton to='/modeselection' />
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-orange-400 bg-clip-text text-transparent">
             Learn Mode
             </h1>
@@ -57,7 +49,7 @@ function LearnMode({ onBack = () => {} }){
         </div>
 
         {/* Flashcard */}
-        <div className="flex justify-center mb-8">
+        <div className="mt-20 flex justify-center mb-8">
             <div className="relative w-full max-w-2xl h-96">
             <div 
                 className="absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out"
@@ -76,12 +68,6 @@ function LearnMode({ onBack = () => {} }){
                     <p className="text-lg text-gray-700 mb-8">
                     {flashcards[currentCard].question}
                     </p>
-                    <button
-                    onClick={handleFlip}
-                    className="bg-gradient-to-r from-purple-600 to-orange-400 text-white font-semibold py-3 px-8 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                    >
-                    Show Answer
-                    </button>
                 </div>
                 </div>
 
