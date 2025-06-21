@@ -151,7 +151,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Upload Documents</h2>
+          <h2 className="text-2xl font-bold text-gray-900 font-playfair">Upload Documents</h2>
           <button 
             className="text-2xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded-md transition-all duration-200"
             onClick={onClose}
@@ -178,10 +178,10 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
           >
             <div className="pointer-events-none">
               <div className="text-5xl mb-4">📁</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              <h3 className="text-xl font-semibold text-gray-700 mb-2 font-inter">
                 Drop files here or click to browse
               </h3>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 text-sm font-inter">
                 Supports PDF and TXT files
               </p>
               <input
@@ -198,7 +198,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
           {/* File List */}
           {uploadedFiles.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 font-inter">
                 Files to upload ({uploadedFiles.length})
               </h3>
               {uploadedFiles.map((uploadedFile) => (
@@ -208,10 +208,10 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
                       {getFileIcon(uploadedFile.file.type)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-800 truncate">
+                      <div className="font-medium text-gray-800 truncate font-inter">
                         {uploadedFile.file.name}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 font-inter">
                         {(uploadedFile.file.size / 1024).toFixed(1)} KB
                       </div>
                     </div>
@@ -230,7 +230,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
                   )}
                   
                   {uploadedFile.status === 'error' && (
-                    <div className="text-red-600 text-sm mt-2">{uploadedFile.error}</div>
+                    <div className="text-red-600 text-sm mt-2 font-inter">{uploadedFile.error}</div>
                   )}
                   
                   <button 
@@ -248,14 +248,14 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
           {/* Upload Button */}
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
             <button 
-              className="brand-btn brand-btn-outline"
+              className="brand-btn brand-btn-outline font-inter"
               onClick={onClose}
               disabled={isUploading}
             >
               Cancel
             </button>
             <button 
-              className="brand-btn brand-btn-filled"
+              className="brand-btn brand-btn-filled font-inter"
               onClick={handleUpload}
               disabled={uploadedFiles.length === 0 || isUploading}
             >

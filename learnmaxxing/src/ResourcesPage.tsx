@@ -4,7 +4,6 @@ import FileUploadModal from './FileUploadModal';
 interface Resource {
   id: string;
   name: string;
-  icon: string;
   topicsCount: number;
 }
 
@@ -23,11 +22,11 @@ const ResourcesPage: React.FC = () => {
 
   // Sample data - replace with actual data from your backend
   const resources: Resource[] = [
-    { id: '1', name: 'Mathematics', icon: '📐', topicsCount: 12 },
-    { id: '2', name: 'Computer Science', icon: '💻', topicsCount: 8 },
-    { id: '3', name: 'Physics', icon: '⚛️', topicsCount: 15 },
-    { id: '4', name: 'Literature', icon: '📚', topicsCount: 6 },
-    { id: '5', name: 'History', icon: '🏛️', topicsCount: 10 },
+    { id: '1', name: 'Mathematics', topicsCount: 12 },
+    { id: '2', name: 'Computer Science', topicsCount: 8 },
+    { id: '3', name: 'Physics', topicsCount: 15 },
+    { id: '4', name: 'Literature', topicsCount: 6 },
+    { id: '5', name: 'History', topicsCount: 10 },
   ];
 
   const topics: Topic[] = [
@@ -41,13 +40,7 @@ const ResourcesPage: React.FC = () => {
 
   const filteredTopics = selectedResource 
     ? topics.filter(topic => topic.category === selectedResource)
-    : topics;
-
-  const getCompletionColor = (percentage: number) => {
-    if (percentage >= 80) return 'bg-green-500';
-    if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
+    : [];
 
   const handleUpload = async (files: File[]) => {
     console.log('Files to upload:', files);
@@ -73,11 +66,11 @@ const ResourcesPage: React.FC = () => {
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             {isSidebarOpen && (
-              <h2 className="text-xl font-bold gradient-text">Resources</h2>
+              <h2 className="text-xl font-bold gradient-text font-playfair">Resources</h2>
             )}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              className={`p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 ${!isSidebarOpen ? 'mx-auto' : ''}`}
             >
               <span className="text-xl">
                 {isSidebarOpen ? '◀' : '▶'}
@@ -92,23 +85,26 @@ const ResourcesPage: React.FC = () => {
                 key={resource.id}
                 onClick={() => setSelectedResource(resource.id)}
                 className={`
-                  w-full p-3 rounded-lg mb-2 text-left transition-all duration-200 group
+                  w-full p-3 rounded-lg mb-2 text-left transition-all duration-200 group relative
                   ${selectedResource === resource.id 
-                    ? 'bg-purple-100 border-2 border-purple-600' 
+                    ? 'bg-blue-100 border-2 border-blue-600' 
                     : 'hover:bg-gray-50 border-2 border-transparent'
                   }
                 `}
+                title={!isSidebarOpen ? resource.name : undefined}
               >
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3 flex-shrink-0">
-                    {resource.icon}
-                  </span>
+                <div className={`flex items-center ${!isSidebarOpen ? 'justify-center' : ''}`}>
+                  <div className="flex-shrink-0">
+                    <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd"></path>
+                    </svg>
+                  </div>
                   {isSidebarOpen && (
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-800 truncate">
+                    <div className="flex-1 min-w-0 ml-3">
+                      <h3 className="font-semibold text-gray-800 truncate font-inter">
                         {resource.name}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 font-inter">
                         {resource.topicsCount} topics
                       </p>
                     </div>
@@ -117,80 +113,45 @@ const ResourcesPage: React.FC = () => {
               </button>
             ))}
           </div>
-
-          {/* All Topics Button */}
-          <div className="p-2 border-t border-gray-200 mt-4">
-            <button
-              onClick={() => setSelectedResource(null)}
-              className={`
-                w-full p-3 rounded-lg text-left transition-all duration-200
-                ${selectedResource === null 
-                  ? 'bg-blue-100 border-2 border-blue-600' 
-                  : 'hover:bg-gray-50 border-2 border-transparent'
-                }
-              `}
-            >
-              <div className="flex items-center">
-                <span className="text-2xl mr-3 flex-shrink-0">📋</span>
-                {isSidebarOpen && (
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-800">All Topics</h3>
-                    <p className="text-sm text-gray-500">
-                      View all available topics
-                    </p>
-                  </div>
-                )}
-              </div>
-            </button>
-          </div>
         </div>
 
         {/* Main Content Area */}
         <div className="flex-1 p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold gradient-text mb-4">
+            <h1 className="text-4xl font-bold gradient-text mb-4 font-playfair">
               {selectedResource 
                 ? resources.find(r => r.id === selectedResource)?.name 
-                : 'All Topics'
+                : 'Select a Resource'
               }
             </h1>
-            <p className="text-gray-600 text-lg">
-              {selectedResource 
-                ? `Explore topics in ${resources.find(r => r.id === selectedResource)?.name}`
-                : 'Browse all available learning topics'
-              }
-            </p>
+            {!selectedResource && (
+              <p className="text-gray-600 text-lg font-inter">
+                Choose a resource from the sidebar to view topics
+              </p>
+            )}
           </div>
 
-          {/* Topics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Topics List */}
+          <div className="space-y-4">
             {filteredTopics.map((topic) => (
               <div
                 key={topic.id}
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer group flex items-center justify-between"
               >
-                <div className="mb-4">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors duration-200">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1 group-hover:text-purple-600 transition-colors duration-200 font-inter">
                     {topic.title}
                   </h3>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-600 text-sm font-inter">
                     {topic.description}
                   </p>
                 </div>
 
-                {/* Progress Bar and Percentage */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex-1 mr-4">
-                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${getCompletionColor(topic.completionPercentage)} transition-all duration-300`}
-                        style={{ width: `${topic.completionPercentage}%` }}
-                      />
-                    </div>
-                  </div>
+                {/* Percentage */}
+                <div className="ml-6">
                   <span className={`
-                    text-sm font-semibold px-2 py-1 rounded-full
+                    text-lg font-bold px-4 py-2 rounded-full font-inter
                     ${topic.completionPercentage >= 80 
                       ? 'bg-green-100 text-green-800' 
                       : topic.completionPercentage >= 50
@@ -201,26 +162,6 @@ const ResourcesPage: React.FC = () => {
                     {topic.completionPercentage}%
                   </span>
                 </div>
-
-                {/* Status Badge */}
-                <div className="flex justify-between items-center">
-                  <span className={`
-                    text-xs px-2 py-1 rounded-full font-medium
-                    ${topic.completionPercentage === 100 
-                      ? 'bg-green-100 text-green-800' 
-                      : topic.completionPercentage > 0
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }
-                  `}>
-                    {topic.completionPercentage === 100 
-                      ? 'Completed' 
-                      : topic.completionPercentage > 0
-                        ? 'In Progress'
-                        : 'Not Started'
-                    }
-                  </span>
-                </div>
               </div>
             ))}
           </div>
@@ -228,14 +169,13 @@ const ResourcesPage: React.FC = () => {
           {/* Empty State */}
           {filteredTopics.length === 0 && (
             <div className="text-center py-16">
-              <div className="text-6xl mb-4">📚</div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                No topics available
+              <h3 className="text-xl font-semibold text-gray-800 mb-2 font-playfair">
+                {selectedResource ? 'No topics available' : 'Select a resource'}
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 font-inter">
                 {selectedResource 
                   ? 'This resource doesn\'t have any topics yet.'
-                  : 'Start by adding some learning resources.'
+                  : 'Choose a resource from the sidebar to view its topics.'
                 }
               </p>
             </div>
