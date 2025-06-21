@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FileUploadModal from './FileUploadModal';
 
 interface Group {
@@ -19,6 +20,7 @@ const GroupsPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Sample data - replace with actual data from your backend
   const groups: Group[] = [
@@ -45,6 +47,15 @@ const GroupsPage: React.FC = () => {
   const handleUpload = async (files: File[]) => {
     console.log('Files to upload:', files);
     // Handle file upload logic here
+  };
+
+  const handleTopicClick = (topicId: string) => {
+    const selectedTopic = topics.find(topic => topic.id === topicId);
+    navigate('/modeselection', { 
+      state: { 
+        topic: selectedTopic 
+      } 
+    });
   };
 
   const RoundPlusButton = () => (
@@ -131,6 +142,7 @@ const GroupsPage: React.FC = () => {
             {filteredTopics.map((topic) => (
               <div
                 key={topic.id}
+                onClick={() => handleTopicClick(topic.id)}
                 className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer group flex items-center justify-between"
               >
                 <div className="flex-1">
