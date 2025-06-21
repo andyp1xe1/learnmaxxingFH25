@@ -5,6 +5,10 @@ import LandingPage from './LandingPage';
 import LogIn from './LogIn';
 import SignUp from './SignUp';
 import GroupsPage from './GroupsPage';
+import ModeSelection from './ModeSelection';
+import ExamMode from './ExamMode';
+import LearnMode from './LearnMode';
+import AssessmentResults from './AssestmentResults';
 
 type Credentials = {
   username: string;
@@ -23,11 +27,15 @@ function App() {
     <>
       <div className="rounded-xl max-w-350 mx-auto px-4 bg-gradient-to-br from-purple-50 via-white to-blue-50">
       <Router>
-          <Routes>
+        <Routes>
           <Route path="/login" element={<LogIn onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignUp onSignup={handleSignup} />} />
           <Route path="/" element={<LandingPage />}/>
           <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/modeselection" element={<ModeSelection/>} />
+          <Route path="/exammode" element={<ExamMode />} />
+          <Route path="/learnmode" element={<LearnMode />} />
+          <Route path="/assestmentresults" element={<AssessmentResults />}/>
         </Routes>
       </Router>
       </div>
