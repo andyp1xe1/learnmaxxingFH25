@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { D1Database } from "@cloudflare/workers-types"
 
 export type WorkerBindings = {
   DB: D1Database
