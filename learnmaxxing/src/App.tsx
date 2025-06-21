@@ -4,6 +4,10 @@ import { BrowserRouter as Router,Routes,Route} from 'react-router-dom';
 import LandingPage from './LandingPage';
 import LogIn from './LogIn';
 import SignUp from './SignUp';
+import ModeSelection from './ModeSelection';
+import ExamMode from './ExamMode';
+import LearnMode from './LearnMode';
+
 type Credentials = {
   username: string;
   password: string;
@@ -19,11 +23,14 @@ function App() {
 
   return (
     <>
-      <div className="rounded-xl max-w-350 mx-auto px-4 bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div>
       <Router>
           <Routes>
           <Route path="/login" element={<LogIn onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignUp onSignup={handleSignup} />} />
+          <Route path="/modeselection" element={<ModeSelection/>} />
+          <Route path="/exammode" element={<ExamMode />} />
+          <Route path="/learnmode" element={<LearnMode />} />
           <Route path="/" element={<LandingPage />}/>
         </Routes>
       </Router>
