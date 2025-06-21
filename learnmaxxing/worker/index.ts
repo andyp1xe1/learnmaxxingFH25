@@ -1,12 +1,14 @@
 import { Hono } from "hono";
 import type { D1Database } from "@cloudflare/workers-types"
 import { createRepositories } from "../db";
-
+import quizRouter from "./quiz";
 export type WorkerBindings = {
   DB: D1Database
 }
 
 const app = new Hono<{ Bindings: WorkerBindings }>()
+// Mount the quiz router
+app.route("/api/quiz", quizRouter);
 
 app.get('/api/', (c) => {
   return c.json({
