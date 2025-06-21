@@ -3,15 +3,13 @@
 export interface User {
   id: number;
   username: string;
-  email?: string;
-  password_hash?: string;
+  password?: string;
   created_at: string;
 }
 
 export interface NewUser {
   username: string;
-  email?: string;
-  password_hash?: string;
+  password?: string;
 }
 
 export interface Quiz {
