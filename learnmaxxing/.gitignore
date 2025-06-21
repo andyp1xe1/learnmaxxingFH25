@@ -41,5 +41,9 @@ yarn-error.log*
 
 # System files
 Thumbs.db
-bun.lock
 package-lock.json
+# Bun
+bun.lock
+
+# Wrangler
+.wrangler/
