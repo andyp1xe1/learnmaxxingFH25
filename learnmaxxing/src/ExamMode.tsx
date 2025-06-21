@@ -75,7 +75,7 @@ function ExamMode(){
           {/* Header */}
         <div className="flex items-center justify-between mb-8">
             <BackButton to='/modeselection' />
-            <h1 className="text-4xl font-playfair font-bold bg-gradient-to-r from-purple-600 to-orange-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-playfair font-bold bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent">
                 Exam Mode
             </h1>
             <div className="text-right">
@@ -92,7 +92,7 @@ function ExamMode(){
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                className="bg-gradient-to-r from-purple-600 to-orange-400 h-2 rounded-full transition-all duration-300"
+                className=" bg-[linear-gradient(to_right,#6a29ab,#fca95b)] h-2 rounded-full transition-all duration-300"
                 style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
                 ></div>
             </div>
@@ -162,7 +162,7 @@ function ExamMode(){
             <button
                 onClick={handleNext}
                 disabled={!selectedAnswer}
-                className="bg-gradient-to-r from-purple-600 to-orange-400 text-white font-semibold py-3 px-8 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="bg-[linear-gradient(to_right,#6a29ab,#fca95b)] text-white font-semibold py-3 px-8 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
                 {showResult ? (currentQuestion < questions.length - 1 ? 'Next Question' : 'Finish Exam') : 'Submit Answer'}
             </button>
