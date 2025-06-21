@@ -7,6 +7,7 @@ import LandingPage from './LandingPage';
 import LogIn from './LogIn';
 import SignUp from './SignUp';
 import FileUploadDemo from './FileUploadDemo';
+import ResourcesPage from './ResourcesPage';
 
 type Credentials = {
   username: string;
@@ -30,6 +31,7 @@ function App() {
           <Route path="/signup" element={<SignUp onSignup={handleSignup} />} />
           <Route path="/" element={<LandingPage />}/>
           <Route path="/upload-demo" element={<FileUploadDemo />} />
+          <Route path="/resources" element={<ResourcesPage />} />
         </Routes>
       </Router>
       </div>
