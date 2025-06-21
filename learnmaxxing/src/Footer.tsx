@@ -1,7 +1,7 @@
 import {Brain} from 'lucide-react'
 function Footer() {
     return (
-        <footer className="px-6 py-12 bg-gray-900 rounded-2xl mt-10">
+        <footer className="px-6 py-12 bg-gray-800 rounded-2xl mt-10">
         <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between flex-wrap">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
