@@ -15,7 +15,7 @@ lerna-debug.log*
 .env.production.local
 .dev.vars
 .dev.vars.*
-
+.wrangler/state/v3/d1/*
 # Node modules
 node_modules/
 

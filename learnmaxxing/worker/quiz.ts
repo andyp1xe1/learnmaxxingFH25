@@ -29,8 +29,7 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
       return c.json({ error: "A prompt string is required" }, 400);
     }
 
-    const apiKey = "AIzaSyCcConKJNslbmdbip9VqwCWQnXhPmQHdRc";
-    // c.env.GEMINI_API_KEY;
+    const apiKey = c.env.GEMINI_API_KEY;
     if (!apiKey) {
       return c.json({ error: "API key not configured" }, 500);
     }
