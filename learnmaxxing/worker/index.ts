@@ -28,8 +28,7 @@ app.post('/api/users', async (c) => {
   try {
     const user = await repos.users.create({
       username: body.username,
-      email: body.email,
-      password_hash: body.password_hash
+      password: body.password
     });
     return c.json(user, 201);
   } catch (error) {

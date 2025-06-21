@@ -7,14 +7,13 @@ export class UserRepository extends BaseRepository {
    */
   async create(userData: NewUser): Promise<User> {
     const query = `
-      INSERT INTO user (username, email, password_hash)
-      VALUES (?, ?, ?)
+      INSERT INTO user (username, password)
+      VALUES (?, ?)
     `;
     
     const id = await this.insert(query, [
       userData.username,
-      userData.email || null,
-      userData.password_hash || null
+      userData.password || null
     ]);
     
     return this.findById(id) as Promise<User>;
@@ -37,14 +36,6 @@ export class UserRepository extends BaseRepository {
   }
 
   /**
-   * Find user by email
-   */
-  async findByEmail(email: string): Promise<User | null> {
-    const query = "SELECT * FROM user WHERE email = ?";
-    return this.findOne<User>(query, [email]);
-  }
-
-  /**
    * Get all users
    */
   async findAll(): Promise<User[]> {
@@ -63,13 +54,9 @@ export class UserRepository extends BaseRepository {
       fields.push("username = ?");
       values.push(updates.username);
     }
-    if (updates.email !== undefined) {
-      fields.push("email = ?");
-      values.push(updates.email);
-    }
-    if (updates.password_hash !== undefined) {
-      fields.push("password_hash = ?");
-      values.push(updates.password_hash);
+    if (updates.password !== undefined) {
+      fields.push("password = ?");
+      values.push(updates.password);
     }
     
     if (fields.length === 0) return false;
