@@ -7,6 +7,7 @@ import SignUp from './SignUp';
 import ModeSelection from './ModeSelection';
 import ExamMode from './ExamMode';
 import LearnMode from './LearnMode';
+import AssessmentResults from './AssestmentResults';
 
 type Credentials = {
   username: string;
@@ -31,7 +32,8 @@ function App() {
           <Route path="/modeselection" element={<ModeSelection/>} />
           <Route path="/exammode" element={<ExamMode />} />
           <Route path="/learnmode" element={<LearnMode />} />
-          <Route path="/" element={<LandingPage />}/>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/assestmentresults" element={<AssessmentResults />}/>
         </Routes>
       </Router>
       </div>
