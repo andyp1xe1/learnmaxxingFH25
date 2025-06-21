@@ -10,6 +10,7 @@ import GroupsPage from './GroupsPage';
 import ModeSelection from './ModeSelection';
 import ExamMode from './ExamMode';
 import LearnMode from './LearnMode';
+import AssessmentResults from './AssestmentResults';
 
 type Credentials = {
   username: string;
@@ -36,6 +37,7 @@ function App() {
           <Route path="/learnmode" element={<LearnMode />} />
           <Route path="/" element={<LandingPage />}/>
           <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/assestmentresults" element={<AssessmentResults />}/>
         </Routes>
       </Router>
       </div>
