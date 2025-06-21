@@ -107,13 +107,11 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
         description: `Quiz on the topic: ${topic}`,
         group_id: group.id
       })
-      
-      const referenceMap = new Map<string, number>();
+        const referenceMap = new Map<string, number>();
       for (const q of quizQuestions) {
         if (!referenceMap.has(q.sourceReference)) {
           // Save reference and store its id
           const ref = await repos.references.create({
-            quiz_id: quiz.id,
             title: q.sourceReference.substring(0, 100), // Optional: use first 100 chars as title
             content: new TextEncoder().encode(q.sourceReference), // Store as ArrayBuffer
           });
@@ -157,6 +155,235 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error generating topics/quizzes:", errorMessage);
     return c.json({ error: "Failed to generate topics/quizzes", details: errorMessage }, 500);
+  }
+});
+
+quizRouter.post("/analyze-content-and-suggest", async (c) => {
+  try {
+    const repos = createRepositories(c.env.DB);
+    const { contents } = await c.req.json();
+    if (!contents || !Array.isArray(contents) || contents.length === 0) {
+      return c.json({ error: "Contents array is required and must not be empty" }, 400);
+    }
+
+    const apiKey = c.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return c.json({ error: "API key not configured" }, 500);
+    }
+    const ai = new GoogleGenAI({ apiKey });    // 1. Save all contents to database first and get their IDs
+    const savedContents: Array<{id: number, content: string}> = [];
+    for (let i = 0; i < contents.length; i++) {
+      const content = contents[i];
+      const ref = await repos.references.create({
+        title: `Content ${i + 1}`,
+        content: new TextEncoder().encode(content)
+      });
+      savedContents.push({
+        id: ref.id,
+        content: content
+      });
+    }
+
+    // 2. Get all existing groups and their quizzes from database
+    const existingGroups = await repos.groups.findAll();
+    const existingGroupsData: Array<{groupId: number, groupName: string, topics: Array<{id: number, title: string}>}> = [];
+    
+    for (const group of existingGroups) {
+      const quizzes = await repos.groups.getQuizzes(group.id);
+      existingGroupsData.push({
+        groupId: group.id,
+        groupName: group.name,
+        topics: quizzes.map((quiz: any) => ({
+          id: quiz.id,
+          title: quiz.title
+        }))
+      });
+    }
+
+    // 3. Prepare context for AI about existing content
+    const existingContext = existingGroupsData.length > 0 
+      ? `Existing groups and topics in database:\n${JSON.stringify(existingGroupsData, null, 2)}`
+      : "No existing groups or topics in database.";
+
+    // 4. Prepare contents with database IDs
+    const contentWithIds = savedContents.map(({id, content}) => 
+      `[Content ID ${id}]: ${content}`
+    ).join('\n\n');
+
+    // 5. Ask AI to analyze content and suggest topics/groups
+    const suggestionResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `
+        Analyze the following contents and organize quiz topics into groups. 
+        
+        ${existingContext}
+        
+        Contents to analyze:
+        ${contentWithIds}
+        
+        Based on these contents, organize topics that can use the provided content:
+        1. PRIORITIZE reusing existing groups and topics where they fit
+        2. For existing topics, you can enhance them with new content
+        3. Only create new topics when existing ones don't fit the content
+        4. Only create new groups when content doesn't fit in any existing group
+        5. Use the content database IDs (not array indices) to reference content
+        6. Only include topics that have content to work with (contentIds not empty)
+        
+        Return as JSON with this structure:
+        {
+          "groups": [
+            {
+              "groupId": number (use existing groupId, or -1 for new group),
+              "groupName": "string",
+              "topics": [
+                {
+                  "topicId": number (use existing topic id, or -1 for new topic),
+                  "topicName": "string",
+                  "isNew": boolean,
+                  "contentIds": [number array of database reference IDs]
+                }
+              ]
+            }
+          ]
+        }
+      `,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            groups: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  groupId: { type: Type.NUMBER },
+                  groupName: { type: Type.STRING },
+                  topics: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        topicId: { type: Type.NUMBER },
+                        topicName: { type: Type.STRING },
+                        isNew: { type: Type.BOOLEAN },
+                        contentIds: {
+                          type: Type.ARRAY,
+                          items: { type: Type.NUMBER }
+                        }
+                      },
+                      propertyOrdering: ["topicId", "topicName", "isNew", "contentIds"]
+                    }
+                  }
+                },
+                propertyOrdering: ["groupId", "groupName", "topics"]
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const suggestionText = suggestionResponse.text;
+    if (!suggestionText) {
+      return c.json({ error: "No suggestions generated" }, 500);
+    }    const suggestions = JSON.parse(suggestionText);
+
+    // Process the suggestions and create missing groups/topics
+    const processedGroups: Array<{
+      groupId: number,
+      groupName: string,
+      topics: Array<{
+        topicId: number,
+        topicName: string,
+        isNew: boolean,
+        contentIds: number[]
+      }>
+    }> = [];
+    
+    for (const suggestedGroup of suggestions.groups) {
+      let group;
+      
+      // Handle group creation/retrieval
+      if (suggestedGroup.groupId === -1) {
+        // Create new group
+        group = await repos.groups.create({
+          name: suggestedGroup.groupName
+        });
+      } else {
+        // Use existing group
+        group = await repos.groups.findById(suggestedGroup.groupId);
+        if (!group) {
+          // Fallback: create group if it doesn't exist
+          group = await repos.groups.create({
+            name: suggestedGroup.groupName
+          });
+        }
+      }
+
+      const processedTopics: Array<{
+        topicId: number,
+        topicName: string,
+        isNew: boolean,
+        contentIds: number[]
+      }> = [];
+      
+      for (const suggestedTopic of suggestedGroup.topics) {
+        // Filter out topics with empty contentIds
+        if (!suggestedTopic.contentIds || suggestedTopic.contentIds.length === 0) {
+          continue;
+        }
+        
+        let topic;
+        
+        // Handle topic creation/retrieval
+        if (suggestedTopic.topicId === -1) {
+          // Create new topic
+          topic = await repos.quizzes.create({
+            title: suggestedTopic.topicName,
+            description: `Quiz on the topic: ${suggestedTopic.topicName}`,
+            group_id: group.id
+          });
+        } else {
+          // Use existing topic
+          topic = await repos.quizzes.findById(suggestedTopic.topicId);
+          if (!topic) {
+            // Fallback: create topic if it doesn't exist
+            topic = await repos.quizzes.create({
+              title: suggestedTopic.topicName,
+              description: `Quiz on the topic: ${suggestedTopic.topicName}`,
+              group_id: group.id
+            });
+          }
+        }
+
+        processedTopics.push({
+          topicId: topic.id,
+          topicName: topic.title,
+          isNew: suggestedTopic.isNew,
+          contentIds: suggestedTopic.contentIds
+        });
+      }
+
+      // Only add group if it has topics with content
+      if (processedTopics.length > 0) {
+        processedGroups.push({
+          groupId: group.id,
+          groupName: group.name,
+          topics: processedTopics
+        });
+      }
+    }
+
+    return c.json({
+      groups: processedGroups,
+      savedContentIds: savedContents.map(c => c.id)
+    });
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error analyzing content:", errorMessage);
+    return c.json({ error: "Failed to analyze content", details: errorMessage }, 500);
   }
 });
 

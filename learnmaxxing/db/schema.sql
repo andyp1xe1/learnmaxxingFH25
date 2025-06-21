@@ -40,11 +40,9 @@ CREATE TABLE IF NOT EXISTS user_quiz (
 -- Reference table
 CREATE TABLE IF NOT EXISTS reference (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  quiz_id INTEGER NOT NULL,
   title TEXT,
   content BLOB NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (quiz_id) REFERENCES quiz(id)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Question table
@@ -70,7 +68,6 @@ CREATE TABLE IF NOT EXISTS reference_question (
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_user_quiz_user_id ON user_quiz(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_quiz_quiz_id ON user_quiz(quiz_id);
-CREATE INDEX IF NOT EXISTS idx_reference_quiz_id ON reference(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_question_quiz_id ON question(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_reference_question_question_id ON reference_question(question_id);
 CREATE INDEX IF NOT EXISTS idx_reference_question_reference_id ON reference_question(reference_id);

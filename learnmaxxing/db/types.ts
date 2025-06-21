@@ -42,14 +42,12 @@ export interface NewUserQuiz {
 
 export interface Reference {
   id: number;
-  quiz_id: number;
-  title?: string;
+  title: string | null;
   content: ArrayBuffer;
   created_at: string;
 }
 
 export interface NewReference {
-  quiz_id: number;
   title?: string;
   content: ArrayBuffer;
 }

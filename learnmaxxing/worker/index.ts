@@ -137,7 +137,8 @@ app.post('/api/protected/quizzes', async (c) => {
   try {
     const quiz = await repos.quizzes.create({
       title: body.title,
-      description: body.description
+      description: body.description,
+      group_id: body.group_id
     });
     return c.json(quiz, 201);
   } catch (error) {
