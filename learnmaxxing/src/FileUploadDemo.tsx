@@ -33,10 +33,10 @@ const FileUploadDemo: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold gradient-text mb-4">
+          <h1 className="text-4xl font-bold gradient-text mb-4 font-playfair">
             File Upload Demo
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-lg font-inter">
             Click the plus button below to open the file upload modal
           </p>
         </div>
@@ -56,10 +56,10 @@ const FileUploadDemo: React.FC = () => {
         {/* Instructions */}
         <div className="mt-12 max-w-2xl mx-auto text-center">
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3 font-inter">
               How to use:
             </h3>
-            <ul className="text-gray-600 space-y-2 text-left">
+            <ul className="text-gray-600 space-y-2 text-left font-inter">
               <li className="flex items-center">
                 <span className="w-2 h-2 bg-purple-600 rounded-full mr-3"></span>
                 Click the plus button to open the upload modal
