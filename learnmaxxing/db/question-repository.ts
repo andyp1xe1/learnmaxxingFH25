@@ -6,6 +6,7 @@ export class QuestionRepository extends BaseRepository {
    * Create a new question
    */
   async create(questionData: NewQuestion): Promise<Question> {
+    console.log("Entered repo create method with data:", questionData);
     const query = `
       INSERT INTO question (quiz_id, question_json, explanation)
       VALUES (?, ?, ?)

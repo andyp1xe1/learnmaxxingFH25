@@ -38,10 +38,12 @@ export class QuizRepository extends BaseRepository {
   /**
    * Search quizzes by title
    */
-  async findByTitle(title: string): Promise<Quiz[]> {
-    const query = "SELECT * FROM quiz WHERE title LIKE ? ORDER BY created_at DESC";
-    return this.findMany<Quiz>(query, [`%${title}%`]);
+  async findByTitle(title: string): Promise<Quiz | null> {
+    const query = "SELECT * FROM quiz WHERE title = ? LIMIT 1";
+    const results = await this.findMany<Quiz>(query, [title]);
+    return results[0] || null;
   }
+
 
   /**
    * Update quiz
