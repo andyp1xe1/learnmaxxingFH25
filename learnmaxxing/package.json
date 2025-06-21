@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.10",
+    "hono": "^4.8.2",
+    "learnmaxxing": ".",
     "lucide-react": "^0.522.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -19,6 +21,8 @@
     "recharts": "^2.15.4"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.7.4",
+    "@cloudflare/workers-types": "^4.20250620.0",
     "@eslint/js": "^9.25.0",
     "@tailwindcss/postcss": "^4.1.10",
     "@types/react": "^19.1.2",

@@ -22,6 +22,13 @@
 	 * databases, object storage, AI inference, real-time communication and more.
 	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
 	 */
+	 "d1_databases": [
+		 {
+			 "binding": "DB",
+			 "database_name": "learnmaxxdb",
+			 "database_id": "4af0230a-14c2-4226-a9a6-95e39b3e60fe"
+		 }
+	 ],
 
 	/**
 	 * Environment Variables
