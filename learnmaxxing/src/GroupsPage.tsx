@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import FileUploadModal from './FileUploadModal';
 
-interface Resource {
+interface Group {
   id: string;
   name: string;
   topicsCount: number;
@@ -15,13 +15,13 @@ interface Topic {
   category: string;
 }
 
-const ResourcesPage: React.FC = () => {
+const GroupsPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [selectedResource, setSelectedResource] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Sample data - replace with actual data from your backend
-  const resources: Resource[] = [
+  const groups: Group[] = [
     { id: '1', name: 'Mathematics', topicsCount: 12 },
     { id: '2', name: 'Computer Science', topicsCount: 8 },
     { id: '3', name: 'Physics', topicsCount: 15 },
@@ -38,8 +38,8 @@ const ResourcesPage: React.FC = () => {
     { id: '6', title: 'Database Design', description: 'Relational databases and SQL fundamentals', completionPercentage: 70, category: '2' },
   ];
 
-  const filteredTopics = selectedResource 
-    ? topics.filter(topic => topic.category === selectedResource)
+  const filteredTopics = selectedGroup 
+    ? topics.filter(topic => topic.category === selectedGroup)
     : [];
 
   const handleUpload = async (files: File[]) => {
@@ -66,7 +66,7 @@ const ResourcesPage: React.FC = () => {
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             {isSidebarOpen && (
-              <h2 className="text-xl font-bold gradient-text font-playfair">Resources</h2>
+              <h2 className="text-xl font-bold gradient-text font-playfair">Groups</h2>
             )}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -78,34 +78,34 @@ const ResourcesPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Resources List */}
+          {/* Groups List */}
           <div className="p-2">
-            {resources.map((resource) => (
+            {groups.map((group) => (
               <button
-                key={resource.id}
-                onClick={() => setSelectedResource(resource.id)}
+                key={group.id}
+                onClick={() => setSelectedGroup(group.id)}
                 className={`
                   w-full p-3 rounded-lg mb-2 text-left transition-all duration-200 group relative
-                  ${selectedResource === resource.id 
+                  ${selectedGroup === group.id 
                     ? 'bg-blue-100 border-2 border-blue-600' 
                     : 'hover:bg-gray-50 border-2 border-transparent'
                   }
                 `}
-                title={!isSidebarOpen ? resource.name : undefined}
+                title={!isSidebarOpen ? group.name : undefined}
               >
                 <div className={`flex items-center ${!isSidebarOpen ? 'justify-center' : ''}`}>
                   <div className="flex-shrink-0">
                     <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd"></path>
+                      <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
                     </svg>
                   </div>
                   {isSidebarOpen && (
                     <div className="flex-1 min-w-0 ml-3">
                       <h3 className="font-semibold text-gray-800 truncate font-inter">
-                        {resource.name}
+                        {group.name}
                       </h3>
                       <p className="text-sm text-gray-500 font-inter">
-                        {resource.topicsCount} topics
+                        {group.topicsCount} topics
                       </p>
                     </div>
                   )}
@@ -119,16 +119,10 @@ const ResourcesPage: React.FC = () => {
         <div className="flex-1 p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold gradient-text mb-4 font-playfair">
-              {selectedResource 
-                ? resources.find(r => r.id === selectedResource)?.name 
-                : 'Select a Resource'
-              }
-            </h1>
-            {!selectedResource && (
-              <p className="text-gray-600 text-lg font-inter">
-                Choose a resource from the sidebar to view topics
-              </p>
+            {selectedGroup && (
+              <h1 className="text-4xl font-bold gradient-text mb-4 font-playfair">
+                {groups.find(g => g.id === selectedGroup)?.name}
+              </h1>
             )}
           </div>
 
@@ -168,16 +162,25 @@ const ResourcesPage: React.FC = () => {
 
           {/* Empty State */}
           {filteredTopics.length === 0 && (
-            <div className="text-center py-16">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2 font-playfair">
-                {selectedResource ? 'No topics available' : 'Select a resource'}
-              </h3>
-              <p className="text-gray-600 font-inter">
-                {selectedResource 
-                  ? 'This resource doesn\'t have any topics yet.'
-                  : 'Choose a resource from the sidebar to view its topics.'
-                }
-              </p>
+            <div className="flex items-center justify-center min-h-96">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2 font-playfair">
+                  {groups.length === 0 
+                    ? 'Add a group' 
+                    : selectedGroup 
+                      ? 'No topics available' 
+                      : 'Select a group'
+                  }
+                </h3>
+                <p className="text-gray-600 font-inter">
+                  {groups.length === 0
+                    ? 'Create your first group to start organizing topics.'
+                    : selectedGroup 
+                      ? 'This group doesn\'t have any topics yet.'
+                      : 'Choose a group from the sidebar to view its topics.'
+                  }
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -196,4 +199,4 @@ const ResourcesPage: React.FC = () => {
   );
 };
 
-export default ResourcesPage;
+export default GroupsPage;

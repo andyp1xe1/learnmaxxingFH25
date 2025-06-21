@@ -4,8 +4,7 @@ import { BrowserRouter as Router,Routes,Route} from 'react-router-dom';
 import LandingPage from './LandingPage';
 import LogIn from './LogIn';
 import SignUp from './SignUp';
-import FileUploadDemo from './FileUploadDemo';
-import ResourcesPage from './ResourcesPage';
+import GroupsPage from './GroupsPage';
 
 type Credentials = {
   username: string;
@@ -28,8 +27,7 @@ function App() {
           <Route path="/login" element={<LogIn onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignUp onSignup={handleSignup} />} />
           <Route path="/" element={<LandingPage />}/>
-          <Route path="/upload-demo" element={<FileUploadDemo />} />
-          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/groups" element={<GroupsPage />} />
         </Routes>
       </Router>
       </div>
