@@ -12,7 +12,7 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -25,6 +25,13 @@
 	 * databases, object storage, AI inference, real-time communication and more.
 	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
 	 */
+	 "d1_databases": [
+		 {
+			 "binding": "DB",
+			 "database_name": "learnmaxxdb",
+			 "database_id": "4af0230a-14c2-4226-a9a6-95e39b3e60fe"
+		 }
+	 ],
 
 	/**
 	 * Environment Variables
@@ -40,7 +47,7 @@
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
 	 */
-	// "assets": { "directory": "./public/", "binding": "ASSETS" },
+	 "assets": { "directory": "./public/", "binding": "ASSETS" },
 
 	/**
 	 * Service Bindings (communicate between multiple Workers)
