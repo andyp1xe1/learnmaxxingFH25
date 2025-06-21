@@ -1,23 +1,19 @@
 import { Hono } from "hono";
-import type { D1Database } from "@cloudflare/workers-types"
+import { serveStatic } from "hono/cloudflare-workers";
+import quizRouter from "./quiz";
+import { Env } from "./types";
 
-export type WorkerBindings = {
-  DB: D1Database
-}
+const app = new Hono<{ Bindings: Env }>();
 
-const app = new Hono<{ Bindings: WorkerBindings }>()
+// Mount the quiz router
+app.route("/api/quiz", quizRouter);
 
+// Your existing API endpoint
+app.get("/api/", (c) => {
+  return c.json({ name: "LearnMaxxing AI" });
+});
 
-app.get('/api/', (c) => {
-  // c.env.DB
-  return c.json({
-    name: "Hello"
-  })
-})
+// Static assets
+app.get("*", serveStatic({ root: "./", manifest: {} }));
 
-// export default app
-//
-
-export default {
-  fetch: app.fetch
-}
+export default app;
