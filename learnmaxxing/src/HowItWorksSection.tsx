@@ -2,19 +2,25 @@ import WorksStep from "./WorkStep";
 function HowItWorksSection() {
     const steps = [
         {
-        number: "1",
-        title: "Upload Your Material",
-        description: "Import your study materials. Our AI automatically generates questions and answers.",
-        gradient: "bg-[linear-gradient(to_bottom,#6a29ab,#fca95b)]"
+            number: "1",
+            title: "Upload Your Material",
+            description: "Import your study materials. Our AI automatically generates questions and answers.",
+            gradient: "bg-[linear-gradient(to_bottom,#6a29ab,#fca95b)]"
         },
         {
-        number: "2",
-        title: "Choose Your Mode",
-        description: "Switch between Learn Mode for comprehensive understanding and Exam Mode for test preparation.",
-        gradient: "bg-[linear-gradient(to_left,#6a29ab,#fca95b)]"
+            number: "2",
+            title: "Assess Your Knowledge",
+            description: "Take a quick diagnostic test and instantly get a visual analysis of your strengths and weaknesses, along with recommendations tailored to optimize your learning.",
+            gradient: "bg-[linear-gradient(to_left,#6a29ab,#fca95b)]"
         },
         {
         number: "3",
+        title: "Choose Your Mode",
+        description: "Switch between Learn Mode for comprehensive understanding and Exam Mode for test preparation.",
+        gradient: "bg-[linear-gradient(to_right,#6a29ab,#fca95b)]"
+        },
+        {
+        number: "4",
         title: "Track & Improve",
         description: "Monitor your progress with detailed analytics and let our AI optimize your learning path.",
         gradient: "bg-[linear-gradient(to_top,#6a29ab,#fca95b)]"
@@ -32,7 +38,7 @@ function HowItWorksSection() {
             </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-4 gap-8">
             {steps.map((step, index) => (
             <WorksStep
                 key={index}
