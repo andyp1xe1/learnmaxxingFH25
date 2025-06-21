@@ -13,7 +13,7 @@ function Hero() {
             </h1>
             <p className="font-inter text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
             Transform your study sessions with AI-powered flashcards and adaptive quizzes. 
-            Switch between <span className='font-bold'>Learn</span> Mode and <span className='font-bold'>Exam</span> Mode to maximize your learning potential.
+            Switch between <span className='font-bold '>Learn</span> Mode and <span className='font-bold'>Exam</span> Mode to maximize your learning potential.
             </p>
             <div className="font-inter flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button onClick={() => navigate('/signup')} className="font-inter px-8 py-4 bg-[linear-gradient(to_right,#6a29ab,#fca95b)] text-white rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-xl flex items-center space-x-2">
