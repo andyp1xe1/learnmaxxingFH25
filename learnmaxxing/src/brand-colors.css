@@ -1,0 +1,65 @@
+:root {
+    --brand-purple: #7c3aed;
+    --brand-pink: #ec4899;
+    --brand-blue: #38bdf8;
+    --brand-bg: linear-gradient(120deg, #f8fafc 0%, #f3e8ff 100%);
+  }
+  
+  .bg-brand-bg {
+    background: var(--brand-bg);
+  }
+  
+  .text-brand-purple {
+    color: var(--brand-purple);
+  }
+  .text-brand-pink {
+    color: var(--brand-pink);
+  }
+  .text-brand-blue {
+    color: var(--brand-blue);
+  }
+  
+  .border-brand-purple {
+    border-color: var(--brand-purple);
+  }
+  .border-brand-blue {
+    border-color: var(--brand-blue);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(90deg, #ec4899 0%, #7c3aed 60%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .brand-btn {
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.6rem 1.8rem;
+    font-size: 1rem;
+    transition: background 0.18s, color 0.18s, border 0.18s;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .brand-btn-filled {
+    background: linear-gradient(90deg, #ec4899 0%, #7c3aed 60%, #38bdf8 100%);
+    color: #fff;
+    border: none;
+  }
+  
+  .brand-btn-filled:hover {
+    background: linear-gradient(90deg, #7c3aed 0%, #ec4899 60%, #38bdf8 100%);
+  }
+  
+  .brand-btn-outline {
+    background: #fff;
+    color: var(--brand-purple);
+    border: 2px solid var(--brand-purple);
+  }
+  
+  .brand-btn-outline:hover {
+    background: #f3e8ff;
+    color: #7c3aed;
+  }
