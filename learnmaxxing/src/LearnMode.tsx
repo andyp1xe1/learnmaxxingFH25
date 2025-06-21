@@ -40,7 +40,7 @@ function LearnMode(){
         {/* Header */}
             <div className="flex items-center justify-between mb-8">
             <BackButton to='/modeselection' />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-orange-400 bg-clip-text text-transparent">
+            <h1 className="font-playfair items-center text-4xl font-bold bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent">
             Learn Mode
             </h1>
             <div className="text-gray-600">
@@ -64,8 +64,8 @@ function LearnMode(){
                     style={{ backfaceVisibility: 'hidden' }}
                 >
                 <div className="bg-white rounded-3xl shadow-2xl p-8 h-full flex flex-col justify-center items-center text-center">
-                    <h2 className="text-2xl font-bold mb-6 text-gray-800">Question</h2>
-                    <p className="text-lg text-gray-700 mb-8">
+                    <h2 className="font-playfair text-4xl font-bold mb-6 text-gray-800">Question</h2>
+                    <p className="font-inter text-xl text-gray-700 mb-8">
                     {flashcards[currentCard].question}
                     </p>
                 </div>
@@ -80,19 +80,19 @@ function LearnMode(){
                 }}
                 >
                 <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl shadow-2xl p-8 h-full flex flex-col justify-center">
-                    <h2 className="text-2xl font-bold mb-4 text-green-800">Answer</h2>
+                    <h2 className="font-playfair text-2xl font-bold mb-4 text-green-800">Answer</h2>
                     <div className="bg-white rounded-2xl p-6 mb-4">
-                    <p className="text-lg text-gray-800 mb-4">
+                    <p className="font-inter text-lg text-gray-800 mb-4">
                         {flashcards[currentCard].answer}
                     </p>
                     </div>
                     <div className="bg-green-100 rounded-2xl p-4 mb-4">
-                        <h3 className="font-semibold text-green-800 mb-2">Context</h3>
-                        <p className="text-sm text-green-700">
+                        <h3 className="font-playfair font-semibold text-green-800 mb-2">Context</h3>
+                        <p className="font-inter text-sm text-green-700">
                         {flashcards[currentCard].context}
                     </p>
                     </div>
-                    <div className="text-xs text-green-600">
+                    <div className="font-inter text-xs text-green-600">
                         Source: {flashcards[currentCard].source}
                     </div>
                     </div>
@@ -112,7 +112,7 @@ function LearnMode(){
             <button
             onClick={handleNext}
             disabled={currentCard >= flashcards.length - 1}
-            className="bg-gradient-to-r from-purple-600 to-orange-400 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="bg-[linear-gradient(to_right,#6a29ab,#fca95b)]  text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
             Next Card
             </button>
