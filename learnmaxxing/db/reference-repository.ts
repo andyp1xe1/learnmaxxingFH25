@@ -7,12 +7,11 @@ export class ReferenceRepository extends BaseRepository {
    */
   async create(referenceData: NewReference): Promise<Reference> {
     const query = `
-      INSERT INTO reference (quiz_id, title, content)
-      VALUES (?, ?, ?)
+      INSERT INTO reference (title, content)
+      VALUES (?, ?)
     `;
     
     const id = await this.insert(query, [
-      referenceData.quiz_id,
       referenceData.title || null,
       referenceData.content
     ]);
@@ -29,27 +28,11 @@ export class ReferenceRepository extends BaseRepository {
   }
 
   /**
-   * Get all references for a quiz
-   */
-  async findByQuizId(quizId: number): Promise<Reference[]> {
-    const query = "SELECT * FROM reference WHERE quiz_id = ? ORDER BY created_at ASC";
-    return this.findMany<Reference>(query, [quizId]);
-  }
-
-  /**
    * Get all references
    */
   async findAll(): Promise<Reference[]> {
     const query = "SELECT * FROM reference ORDER BY created_at DESC";
     return this.findMany<Reference>(query);
-  }
-
-  /**
-   * Search references by title
-   */
-  async findByTitle(title: string): Promise<Reference[]> {
-    const query = "SELECT * FROM reference WHERE title LIKE ? ORDER BY created_at DESC";
-    return this.findMany<Reference>(query, [`%${title}%`]);
   }
 
   /**
@@ -59,10 +42,6 @@ export class ReferenceRepository extends BaseRepository {
     const fields: string[] = [];
     const values: any[] = [];
     
-    if (updates.quiz_id !== undefined) {
-      fields.push("quiz_id = ?");
-      values.push(updates.quiz_id);
-    }
     if (updates.title !== undefined) {
       fields.push("title = ?");
       values.push(updates.title);
@@ -88,24 +67,5 @@ export class ReferenceRepository extends BaseRepository {
     const query = "DELETE FROM reference WHERE id = ?";
     const affected = await this.delete(query, [id]);
     return affected > 0;
-  }
-
-  /**
-   * Delete all references for a quiz
-   */
-  async deleteByQuizId(quizId: number): Promise<number> {
-    const query = "DELETE FROM reference WHERE quiz_id = ?";
-    return await this.delete(query, [quizId]);
-  }
-
-  /**
-   * Count references for a quiz
-   */
-  async countByQuizId(quizId: number): Promise<number> {
-    const result = await this.findOne<{ count: number }>(
-      "SELECT COUNT(*) as count FROM reference WHERE quiz_id = ?",
-      [quizId]
-    );
-    return result?.count || 0;
   }
 }

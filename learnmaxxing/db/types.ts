@@ -22,6 +22,7 @@ export interface Quiz {
 export interface NewQuiz {
   title: string;
   description?: string;
+  group_id: number;
 }
 
 export interface UserQuiz {
@@ -41,14 +42,12 @@ export interface NewUserQuiz {
 
 export interface Reference {
   id: number;
-  quiz_id: number;
-  title?: string;
+  title: string | null;
   content: ArrayBuffer;
   created_at: string;
 }
 
 export interface NewReference {
-  quiz_id: number;
   title?: string;
   content: ArrayBuffer;
 }
@@ -78,4 +77,14 @@ export interface NewReferenceQuestion {
   question_id: number;
   reference_id: number;
   paragraph: string;
+}
+
+export interface Group {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+export interface NewGroup {
+  name: string;
 }

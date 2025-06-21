@@ -8,12 +8,21 @@ CREATE TABLE IF NOT EXISTS user (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- topicGroup table
+CREATE TABLE IF NOT EXISTS topic_group (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Quiz table
 CREATE TABLE IF NOT EXISTS quiz (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   description TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  group_id INTEGER NOT NULL,
+  FOREIGN KEY (group_id) REFERENCES topic_group(id) ON DELETE CASCADE
 );
 
 -- User-Quiz relationship table
@@ -31,11 +40,9 @@ CREATE TABLE IF NOT EXISTS user_quiz (
 -- Reference table
 CREATE TABLE IF NOT EXISTS reference (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  quiz_id INTEGER NOT NULL,
   title TEXT,
   content BLOB NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (quiz_id) REFERENCES quiz(id)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Question table
@@ -61,7 +68,6 @@ CREATE TABLE IF NOT EXISTS reference_question (
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_user_quiz_user_id ON user_quiz(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_quiz_quiz_id ON user_quiz(quiz_id);
-CREATE INDEX IF NOT EXISTS idx_reference_quiz_id ON reference(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_question_quiz_id ON question(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_reference_question_question_id ON reference_question(question_id);
 CREATE INDEX IF NOT EXISTS idx_reference_question_reference_id ON reference_question(reference_id);

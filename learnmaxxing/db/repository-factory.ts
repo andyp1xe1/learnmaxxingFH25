@@ -5,6 +5,7 @@ import { UserQuizRepository } from "./user-quiz-repository";
 import { QuestionRepository } from "./question-repository";
 import { ReferenceRepository } from "./reference-repository";
 import { ReferenceQuestionRepository } from "./reference-question-repository";
+import { GroupRepository } from "./group-repository";
 
 /**
  * Repository factory that provides access to all repository instances
@@ -18,6 +19,7 @@ export class RepositoryFactory {
   private _questionRepository?: QuestionRepository;
   private _referenceRepository?: ReferenceRepository;
   private _referenceQuestionRepository?: ReferenceQuestionRepository;
+  private _groupRepository?: GroupRepository;
 
   constructor(db: D1Database) {
     this.db = db;
@@ -63,6 +65,13 @@ export class RepositoryFactory {
       this._referenceQuestionRepository = new ReferenceQuestionRepository(this.db);
     }
     return this._referenceQuestionRepository;
+  }
+
+  get groups(): GroupRepository {
+    if (!this._groupRepository) {
+      this._groupRepository = new GroupRepository(this.db);
+    }
+    return this._groupRepository;
   }
 }
 
