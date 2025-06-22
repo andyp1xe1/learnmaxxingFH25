@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import BackButton from './BackButton';
+import { apiService } from './services/api';
+import type { Question } from './services/api';
 
 interface Flashcard {
     id: number;
@@ -22,23 +25,62 @@ function LearnMode() {
     const [showDifficulty, setShowDifficulty] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [cardQueue, setCardQueue] = useState<number[]>([]);
+    const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    
+    const location = useLocation();
+    const topic = location.state?.topic;
 
-    const flashcards: Flashcard[] = [
-        {
-            id: 1,
-            question: "What is the primary function of mitochondria in cells?",
-            answer: "Energy production through cellular respiration",
-            context: "Mitochondria are often called the 'powerhouses' of the cell because they generate most of the cell's supply of adenosine triphosphate (ATP), which is used as a source of chemical energy.",
-            source: "Biology Textbook Chapter 4: Cell Structure"
-        },
-        {
-            id: 2,
-            question: "Define photosynthesis and its importance.",
-            answer: "The process by which plants convert light energy into chemical energy",
-            context: "Photosynthesis is crucial for life on Earth as it produces oxygen and glucose, forming the base of most food chains and maintaining atmospheric oxygen levels.",
-            source: "Botany Reference Guide Section 2.1"
-        }
-    ];
+    // Fetch questions on component mount
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            if (!topic) {
+                setError('No topic selected');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                const questionsData = await apiService.getQuizQuestions(topic.id);
+                
+                // Transform the data to match the expected format
+                const transformedFlashcards: Flashcard[] = questionsData.map((q: Question) => ({
+                    id: q.id,
+                    question: q.question_json.question,
+                    answer: q.question_json.correctAnswer,
+                    context: q.explanation || 'No additional context available',
+                    source: topic.title
+                }));
+                
+                setFlashcards(transformedFlashcards);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch questions');
+                // Fallback to placeholder data
+                setFlashcards([
+                    {
+                        id: 1,
+                        question: "What is the primary function of mitochondria in cells?",
+                        answer: "Energy production through cellular respiration",
+                        context: "Mitochondria are often called the 'powerhouses' of the cell because they generate most of the cell's supply of adenosine triphosphate (ATP), which is used as a source of chemical energy.",
+                        source: "Biology Textbook Chapter 4: Cell Structure"
+                    },
+                    {
+                        id: 2,
+                        question: "Define photosynthesis and its importance.",
+                        answer: "The process by which plants convert light energy into chemical energy",
+                        context: "Photosynthesis is crucial for life on Earth as it produces oxygen and glucose, forming the base of most food chains and maintaining atmospheric oxygen levels.",
+                        source: "Botany Reference Guide Section 2.1"
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchQuestions();
+    }, [topic]);
 
     // Calculate difficulty counts
     const difficultyCounts = {
@@ -46,6 +88,39 @@ function LearnMode() {
         ok: difficultyResponses.filter(r => r.difficulty === 'ok').length,
         easy: difficultyResponses.filter(r => r.difficulty === 'easy').length
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading flashcards...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">Error: {error}</p>
+                    <BackButton to="/groups" />
+                </div>
+            </div>
+        );
+    }
+
+    if (flashcards.length === 0) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-gray-600 mb-4">No flashcards available for this topic.</p>
+                    <BackButton to="/groups" />
+                </div>
+            </div>
+        );
+    }
 
     const handleFlip = () => {
         setIsFlipped(!isFlipped);
@@ -98,7 +173,7 @@ function LearnMode() {
             <div className="min-h-screen bg-gradient-to-br from-orange-200 via-purple-200 to-purple-300 p-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-8">
-                        <BackButton to='/modeselection' />
+                        <BackButton to='/modeselection' state={{ topic }} />
                         <h1 className="font-playfair text-4xl font-bold bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent">
                             Completed!
                         </h1>
@@ -155,7 +230,7 @@ function LearnMode() {
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
-                    <BackButton to='/modeselection' />
+                    <BackButton to='/modeselection' state={{ topic }} />
                     <h1 className="font-playfair text-4xl font-bold bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent">
                         Learn Mode
                     </h1>

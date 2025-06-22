@@ -1,19 +1,26 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Brain } from "lucide-react";
+import BackButton from './BackButton';
+
 function ModeSelection() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const topic = location.state?.topic;
+    
     const handleModeSelect = (mode: 'learn' | 'exam') => {
         console.log('User selected mode:', mode);
+        console.log('Topic being passed:', topic);
     
         if (mode === 'learn') {
-            navigate('/learnmode');
+            navigate('/learnmode', { state: { topic } });
         } else if (mode === 'exam') {
-            navigate('/exammode');
+            navigate('/exammode', { state: { topic } });
         }
         };
     return (
     <div className="min-h-screen bg-gradient-to-br from-orange-200 via-purple-200 to-purple-300 flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
+        <BackButton to="/groups" />
         {/* Logo and Header */}
         <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-6">

@@ -2,21 +2,39 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Brain } from 'lucide-react';
 import BackButton from './BackButton';
+import { apiService } from './services/api';
+
 type SignUpProps = {
     onSignup: (credentials: { username: string; password: string }) => void;
     };
 function SignUp({ onSignup }:SignUpProps){
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e:React.FormEvent) => {
-    e.preventDefault();
-    if (username.trim() && password.trim()) {
-        onSignup({ username, password });
-      // After signup, you might want to redirect to login
-        navigate('/login');
-    }
+    const handleSubmit = async (e:React.FormEvent) => {
+        e.preventDefault();
+        if (!username.trim() || !password.trim()) {
+            setError('Please enter both username and password');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            await apiService.register(username, password);
+            onSignup({ username, password });
+            
+            // Navigate to login after successful signup
+            navigate('/login');
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Signup failed');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -44,6 +62,12 @@ function SignUp({ onSignup }:SignUpProps){
 
         {/* Form */}
         <div className="space-y-6">
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+                    {error}
+                </div>
+            )}
+            
             <div>
             <label htmlFor="signup-username" className="block text-sm font-medium text-gray-700 mb-2 font-inter">
                 Username
@@ -56,6 +80,7 @@ function SignUp({ onSignup }:SignUpProps){
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter"
                 placeholder="Choose a username"
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
+                disabled={loading}
             />
             </div>
 
@@ -71,14 +96,16 @@ function SignUp({ onSignup }:SignUpProps){
                 className="mb-5 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter"
                 placeholder="Create a secure password"
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
+                disabled={loading}
             />
             </div>
 
             <button
             onClick={handleSubmit}
-            className="w-full bg-[linear-gradient(to_right,#6a29ab,#fca95b)] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter"
+            disabled={loading}
+            className="w-full bg-[linear-gradient(to_right,#6a29ab,#fca95b)] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-            Create Account
+            {loading ? 'Creating Account...' : 'Create Account'}
             </button>
         </div>
 

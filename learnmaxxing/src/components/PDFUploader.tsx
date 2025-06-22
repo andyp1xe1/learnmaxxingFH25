@@ -1,10 +1,28 @@
 import React, { useState } from 'react'
 import extractTextFromPDF from 'pdf-parser-client-side'
+import { apiService } from '../services/api'
+import TopicSelectionModal from './TopicSelectionModal'
+
+interface Topic {
+  topicId: number;
+  topicName: string;
+  isNew: boolean;
+  contentIds: number[];
+}
+
+interface Group {
+  groupId: number;
+  groupName: string;
+  topics: Topic[];
+}
 
 export default function PDFUploader() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [variant, setVariant] = useState<string>('clean')
+  const [showTopicModal, setShowTopicModal] = useState(false)
+  const [suggestedGroups, setSuggestedGroups] = useState<Group[]>([])
+  const [isGeneratingQuizzes, setIsGeneratingQuizzes] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -21,19 +39,64 @@ export default function PDFUploader() {
     if (!selectedFile) {
       alert('Please select a PDF file first')
       return
-    }    setIsProcessing(true)
+    }
+
+    setIsProcessing(true)
     try {
       console.log('Starting PDF text extraction...')
       const extractedText = await extractTextFromPDF(selectedFile, variant as any)
       console.log('Extracted Text:', extractedText)
+      
       if (typeof extractedText === 'string') {
         console.log('Text length:', extractedText.length, 'characters')
+        
+        // Send extracted text to the backend for analysis
+        console.log('Analyzing content and suggesting topics...')
+        const response = await apiService.analyzeContentAndSuggest([extractedText])
+        
+        console.log('API response:', response)
+        setSuggestedGroups(response.groups || [])
+        setShowTopicModal(true)
       }
     } catch (error) {
-      console.error('Error extracting text from PDF:', error)
+      console.error('Error processing PDF:', error)
       alert('Error processing PDF. Please check the console for details.')
     } finally {
       setIsProcessing(false)
+    }
+  }
+
+  const handleTopicsSelected = async (selectedTopics: Topic[]) => {
+    if (selectedTopics.length === 0) {
+      alert('Please select at least one topic')
+      return
+    }
+
+    setIsGeneratingQuizzes(true)
+    try {
+      console.log('Generating quizzes for selected topics:', selectedTopics)
+      
+      // Prepare selections for the generate-questions endpoint
+      const selections = selectedTopics.map(topic => ({
+        topicId: topic.topicId,
+        topicName: topic.topicName,
+        contentIds: topic.contentIds
+      }))
+      
+      const response = await apiService.generateQuestions(selections)
+      console.log('Quiz generation response:', response)
+      
+      alert(`Successfully generated quizzes for ${selectedTopics.length} topic(s)! Check the Groups page to view them.`)
+      
+      // Reset the form
+      setSelectedFile(null)
+      setSuggestedGroups([])
+      
+    } catch (error) {
+      console.error('Error generating quizzes:', error)
+      alert('Error generating quizzes. Please try again.')
+    } finally {
+      setIsGeneratingQuizzes(false)
     }
   }
 

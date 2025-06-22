@@ -133,7 +133,42 @@ app.get('/api/protected/profile', async (c) => {
 // Public quiz endpoints (no auth required)
 app.get('/api/quizzes', async (c) => {
   const repos = createRepositories(c.env.DB);
-  const quizzes = await repos.quizzes.findAll();
+  const quizzes = await repos.quizzes.findAllWithQuestions();
+  return c.json(quizzes);
+})
+
+// Groups endpoints
+app.get('/api/groups', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const groups = await repos.groups.findAll();
+  return c.json(groups);
+})
+
+app.get('/api/groups/:id', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const groupId = parseInt(c.req.param('id'));
+  
+  if (isNaN(groupId)) {
+    return c.json({ error: "Invalid group ID" }, 400);
+  }
+  
+  const group = await repos.groups.findById(groupId);
+  if (!group) {
+    return c.json({ error: "Group not found" }, 404);
+  }
+  
+  return c.json(group);
+})
+
+app.get('/api/groups/:id/quizzes', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const groupId = parseInt(c.req.param('id'));
+  
+  if (isNaN(groupId)) {
+    return c.json({ error: "Invalid group ID" }, 400);
+  }
+  
+  const quizzes = await repos.groups.getQuizzes(groupId);
   return c.json(quizzes);
 })
 

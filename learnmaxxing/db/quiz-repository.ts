@@ -36,6 +36,7 @@ export class QuizRepository extends BaseRepository {
   }
 
   /**
+
    * Get all quizzes with percentage completion for a specific user
    */
   async findAllWithProgress(userId: number): Promise<(Quiz & { percentage_completed: number })[]> {
@@ -59,6 +60,19 @@ export class QuizRepository extends BaseRepository {
       WHERE q.id = ?
     `;
     return this.findOne<Quiz & { percentage_completed: number }>(query, [userId, id]);
+  }
+
+  /**
+   * Get all quizzes that have questions
+   */
+  async findAllWithQuestions(): Promise<Quiz[]> {
+    const query = `
+      SELECT DISTINCT q.* 
+      FROM quiz q 
+      INNER JOIN question qu ON q.id = qu.quiz_id 
+      ORDER BY q.created_at DESC
+    `;
+    return this.findMany<Quiz>(query);
   }
 
   /**
