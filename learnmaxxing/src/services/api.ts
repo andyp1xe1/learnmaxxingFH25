@@ -46,6 +46,17 @@ export interface Group {
   created_at: string;
 }
 
+export interface AssessmentResult {
+  topic: string;
+  failurePercentage: number;
+  feedback: string;
+  references: Array<{
+    questionId: number;
+    referenceTitle: string;
+    paragraph: string;
+  }>;
+}
+
 class ApiService {
   private baseUrl: string;
   private credentials: { username: string; password: string } | null = null;
@@ -180,7 +191,18 @@ class ApiService {
   }
 
   async getQuizQuestions(quizId: number): Promise<Question[]> {
-    return this.request<Question[]>(`/api/protected/quizzes/${quizId}/questions`);
+    console.log('🔍 API Service: Fetching questions for quiz ID:', quizId);
+    const questions = await this.request<Question[]>(`/api/protected/quizzes/${quizId}/questions`);
+    console.log('📦 API Service: Received questions from API:', questions);
+    console.log('📦 API Service: Questions structure:', questions.map(q => ({
+      id: q.id,
+      quiz_id: q.quiz_id,
+      question: q.question_json?.question,
+      options: q.question_json?.answerOptions,
+      correctAnswer: q.question_json?.correctAnswer,
+      explanation: q.explanation
+    })));
+    return questions;
   }
 
   // Quiz generation endpoints
@@ -206,8 +228,8 @@ class ApiService {
   }
 
   // Assessment endpoints
-  async submitTopicFailureData(data: Array<{ questionId: number; success: boolean; topicId: number }>): Promise<any> {
-    return this.request<any>('/api/topics/failure-percentage', {
+  async submitTopicFailureData(data: Array<{ questionId: number; success: boolean; topicId: number }>): Promise<AssessmentResult[]> {
+    return this.request<AssessmentResult[]>('/api/topics/failure-percentage', {
       method: 'POST',
       body: JSON.stringify(data),
     });

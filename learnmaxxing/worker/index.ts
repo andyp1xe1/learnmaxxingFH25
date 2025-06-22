@@ -315,7 +315,25 @@ app.get('/api/protected/quizzes/:id/questions', async (c) => {
   const repos = createRepositories(c.env.DB);
   const quizId = parseInt(c.req.param('id'));
   
+  console.log('🔍 Worker: Fetching questions for quiz ID:', quizId);
+  
   const questions = await repos.questions.findByQuizId(quizId);
+  console.log('📦 Worker: Questions from database:', questions);
+  console.log('📦 Worker: Questions count:', questions.length);
+  
+  if (questions.length === 0) {
+    console.log('⚠️ Worker: No questions found for quiz ID:', quizId);
+  } else {
+    console.log('📦 Worker: First question structure:', {
+      id: questions[0].id,
+      quiz_id: questions[0].quiz_id,
+      question: questions[0].question_json?.question,
+      options: questions[0].question_json?.answerOptions,
+      correctAnswer: questions[0].question_json?.correctAnswer,
+      explanation: questions[0].explanation
+    });
+  }
+  
   return c.json(questions);
 })
 

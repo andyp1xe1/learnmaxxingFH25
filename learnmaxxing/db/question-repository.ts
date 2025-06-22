@@ -41,16 +41,32 @@ export class QuestionRepository extends BaseRepository {
    * Get all questions for a quiz
    */
   async findByQuizId(quizId: number): Promise<Question[]> {
+    console.log('🔍 QuestionRepo: Finding questions for quiz ID:', quizId);
+    
     const questions = await this.findMany<any>(
       "SELECT * FROM question WHERE quiz_id = ? ORDER BY created_at ASC",
       [quizId]
     );
     
+    console.log('📦 QuestionRepo: Raw questions from DB:', questions);
+    console.log('📦 QuestionRepo: Questions count:', questions.length);
+    
     // Parse the JSON fields
-    return questions.map(q => ({
+    const parsedQuestions = questions.map(q => ({
       ...q,
       question_json: JSON.parse(q.question_json)
     })) as Question[];
+    
+    console.log('📦 QuestionRepo: Parsed questions:', parsedQuestions.map(q => ({
+      id: q.id,
+      quiz_id: q.quiz_id,
+      question: q.question_json?.question,
+      options: q.question_json?.answerOptions,
+      correctAnswer: q.question_json?.correctAnswer,
+      explanation: q.explanation
+    })));
+    
+    return parsedQuestions;
   }
 
   /**

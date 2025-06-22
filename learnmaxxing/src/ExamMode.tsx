@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
 import { apiService } from './services/api';
+import { Trophy, Target } from 'lucide-react';
+import { failedQuizzesService } from './services/failedQuizzesService';
 
 interface Question {
     id: number;
@@ -13,6 +15,13 @@ interface Question {
     };
     correctAnswer: string;
     explanation?: string;
+    topicId?: number; // Add topicId for tracking
+}
+
+interface QuestionResult {
+    questionId: number;
+    success: boolean;
+    topicId: number;
 }
 
 function ExamMode(){
@@ -24,6 +33,9 @@ function ExamMode(){
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [questionResults, setQuestionResults] = useState<QuestionResult[]>([]);
+    const [isGeneralAssessment, setIsGeneralAssessment] = useState(false);
+    const [examCompleted, setExamCompleted] = useState(false);
     
     const location = useLocation();
     const navigate = useNavigate();
@@ -43,9 +55,14 @@ function ExamMode(){
                         question: q.question_json?.question || q.question,
                         options: q.question_json?.answerOptions || q.answerOptions || q.options,
                         correctAnswer: q.question_json?.correctAnswer || q.correctAnswer,
-                        explanation: q.explanation
+                        explanation: q.explanation,
+                        topicId: q.quiz_id || q.quizId || q.topic_id || q.topicId || q.id || index + 1 // Use actual quiz ID or question ID as fallback
                     }));
                     setQuestions(questionsFromUpload);
+                    
+                    // Questions from upload are generated questions (general assessment)
+                    console.log('Questions from upload - General Assessment: true');
+                    setIsGeneralAssessment(true);
                 } 
                 // Check if we have selected topics from topic selection
                 else if (location.state?.selectedTopics) {
@@ -70,15 +87,25 @@ function ExamMode(){
                         question: q.question_json?.question || q.question,
                         options: q.question_json?.answerOptions || q.answerOptions || q.options,
                         correctAnswer: q.question_json?.correctAnswer || q.correctAnswer,
-                        explanation: q.explanation
+                        explanation: q.explanation,
+                        topicId: q.topic_id || q.topicId || 1
                     }));
                     
                     setQuestions(transformedQuestions);
+                    
+                    // Questions from generate-questions API are general assessments
+                    console.log('Questions from generate-questions API - General Assessment: true');
+                    setIsGeneralAssessment(true);
                 }
                 // Check if we have a specific topic/quiz to load
                 else if (location.state?.topic) {
-                    console.log('Loading questions for topic:', location.state.topic);
+                    console.log('🔍 ExamMode: Loading questions for topic:', location.state.topic);
+                    console.log('🔍 ExamMode: Topic ID:', location.state.topic.id);
+                    console.log('🔍 ExamMode: Topic structure:', location.state.topic);
+                    
                     const topicQuestions = await apiService.getQuizQuestions(location.state.topic.id);
+                    console.log('📦 ExamMode: Questions received from API:', topicQuestions);
+                    console.log('📦 ExamMode: Questions count:', topicQuestions.length);
                     
                     // Transform questions to match our interface
                     const transformedQuestions = topicQuestions.map((q) => ({
@@ -86,10 +113,16 @@ function ExamMode(){
                         question: q.question_json.question,
                         options: q.question_json.answerOptions,
                         correctAnswer: q.question_json.correctAnswer,
-                        explanation: q.explanation
+                        explanation: q.explanation,
+                        topicId: location.state.topic.id
                     }));
                     
+                    console.log('📦 ExamMode: Transformed questions:', transformedQuestions);
                     setQuestions(transformedQuestions);
+                    
+                    // Questions from existing quiz are single-topic assessments
+                    console.log('Questions from existing quiz - General Assessment: false');
+                    setIsGeneralAssessment(false);
                 } else {
                     throw new Error('No questions or topic provided');
                 }
@@ -128,17 +161,145 @@ function ExamMode(){
     const handleNext = () => {
         if (!showResult) {
         setShowResult(true);
-        if (selectedAnswer === questions[currentQuestion].correctAnswer) {
+        const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
+        if (isCorrect) {
             setScore(score + 1);
         }
+        
+        // Track the result
+        const result: QuestionResult = {
+            questionId: questions[currentQuestion].id,
+            success: isCorrect,
+            topicId: questions[currentQuestion].topicId || 1
+        };
+        setQuestionResults(prev => [...prev, result]);
         } else {
         if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(currentQuestion + 1);
             setSelectedAnswer('');
             setShowResult(false);
+        } else {
+            // Exam completed - handle navigation
+            handleExamCompletion();
         }
     }
     };
+
+    const handleExamCompletion = () => {
+        console.log('Exam completed. Assessment type:', {
+            isGeneralAssessment,
+            questionSource: location.state?.questions ? 'upload' : 
+                           location.state?.selectedTopics ? 'generate-questions' : 
+                           location.state?.topic ? 'existing-quiz' : 'unknown',
+            totalQuestions: questions.length,
+            score: score
+        });
+
+        if (isGeneralAssessment) {
+            // Navigate to AssessmentResults with the question results
+            console.log('Navigating to AssessmentResults for general assessment');
+            navigate('/assestmentresults', { 
+                state: { 
+                    questionResults,
+                    isGeneralAssessment: true
+                } 
+            });
+        } else {
+            // For single topic, show completion screen
+            console.log('Showing completion screen for single-topic assessment');
+            setExamCompleted(true);
+        }
+    };
+
+    // Completion screen for single-topic assessments
+    if (examCompleted) {
+        const percentage = Math.round((score / questions.length) * 100);
+        const getPerformanceLevel = (score: number) => {
+            if (score >= 90) return { level: 'Excellent', color: 'text-green-600', bgColor: 'bg-green-100' };
+            if (score >= 80) return { level: 'Good', color: 'text-blue-600', bgColor: 'bg-blue-100' };
+            if (score >= 70) return { level: 'Fair', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
+            return { level: 'Needs Work', color: 'text-red-600', bgColor: 'bg-red-100' };
+        };
+        const performance = getPerformanceLevel(percentage);
+
+
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-orange-200 via-purple-200 to-purple-300 p-4">
+                <div className="max-w-4xl mx-auto">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-8">
+                        <BackButton 
+                            to={location.state?.fromUpload ? '/groups' : '/modeselection'} 
+                            state={location.state?.fromUpload ? undefined : { topic: location.state?.topic }}
+                        />
+                        <h1 className="text-4xl font-playfair font-bold bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent">
+                            Exam Complete!
+                        </h1>
+                        <div></div>
+                    </div>
+
+                    {/* Results Card */}
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8">
+                        <div className="text-center">
+                            {/* Trophy Icon */}
+                            <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-orange-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Trophy className="w-10 h-10 text-white" />
+                            </div>
+
+                            {/* Score Display */}
+                            <div className="mb-6">
+                                <div className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-orange-400 bg-clip-text text-transparent mb-2">
+                                    {percentage}%
+                                </div>
+                                <p className="text-gray-600 font-medium">Your Score</p>
+                            </div>
+
+                            {/* Score Details */}
+                            <div className="mb-6">
+                                <div className="text-3xl font-bold text-gray-800 mb-2">
+                                    {score}/{questions.length}
+                                </div>
+                                <p className="text-gray-600 font-medium">Questions Correct</p>
+                            </div>
+
+                            {/* Performance Level */}
+                            <div className="mb-8">
+                                <div className={`inline-flex items-center px-6 py-3 rounded-full font-semibold ${performance.bgColor} ${performance.color}`}>
+                                    <Target className="w-5 h-5 mr-2" />
+                                    {performance.level}
+                                </div>
+                            </div>
+
+                            {/* Topic Info */}
+                            {location.state?.topic && (
+                                <div className="mb-8 p-4 bg-gray-50 rounded-xl">
+                                    <h3 className="font-semibold text-gray-800 mb-2">Topic Completed</h3>
+                                    <p className="text-gray-600">{location.state.topic.title || location.state.topic.name}</p>
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <button
+                                    onClick={() => navigate('/modeselection', { state: { topic: location.state?.topic } })}
+                                    className="bg-gradient-to-r from-purple-600 to-orange-400 hover:from-purple-700 hover:to-orange-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                >
+                                    Try Another Topic
+                                </button>
+                                <button
+                                    onClick={() => navigate('/learnmode', { state: { topic: location.state?.topic } })}
+                                    className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200"
+                                >
+                                    Study This Topic
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-200 via-purple-200 to-purple-300 p-4">

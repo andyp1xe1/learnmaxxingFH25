@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import FileUploadModal from './FileUploadModal';
+import FailedAssessmentsModal from './components/FailedAssessmentsModal';
 import { apiService } from './services/api';
 import type { Quiz, Group } from './services/api';
+import { Target } from 'lucide-react';
+import { failedQuizzesService, type FailedQuiz } from './services/failedQuizzesService';
 
 interface GroupWithQuizzes extends Group {
   quizzes?: Quiz[];
@@ -13,11 +16,45 @@ const GroupsPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isFailedAssessmentsModalOpen, setIsFailedAssessmentsModalOpen] = useState(false);
+  const [failedTopics, setFailedTopics] = useState<FailedQuiz[]>([]);
   const [groups, setGroups] = useState<GroupWithQuizzes[]>([]);
   const [selectedGroupQuizzes, setSelectedGroupQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Load failed quizzes from localStorage on component mount
+  useEffect(() => {
+    const loadFailedQuizzes = () => {
+      console.log('🔍 GroupsPage: Loading failed quizzes from localStorage');
+      const failedQuizzes = failedQuizzesService.getFailedQuizzes();
+      console.log('📦 GroupsPage: Failed quizzes loaded:', failedQuizzes);
+      setFailedTopics(failedQuizzes);
+    };
+
+    loadFailedQuizzes();
+  }, []);
+
+  // Check for failed assessments from navigation state
+  useEffect(() => {
+    if (location.state?.showFailedAssessments && location.state?.failedTopics) {
+      console.log('🔍 GroupsPage: Received failed topics from navigation:', location.state.failedTopics);
+      
+      // Store the new failed topics in localStorage
+      failedQuizzesService.addFailedQuizzes(location.state.failedTopics);
+      
+      // Reload failed quizzes from localStorage
+      const failedQuizzes = failedQuizzesService.getFailedQuizzes();
+      console.log('📦 GroupsPage: Updated failed quizzes from localStorage:', failedQuizzes);
+      setFailedTopics(failedQuizzes);
+      
+      setIsFailedAssessmentsModalOpen(true);
+      // Clear the state to prevent showing modal on refresh
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -95,6 +132,66 @@ const GroupsPage: React.FC = () => {
         topic: selectedTopic 
       } 
     });
+  };
+
+  const handleStudyFailedTopic = (quizId: number | string) => {
+    console.log('🔍 GroupsPage: Study failed topic called with quizId:', quizId);
+    console.log('🔍 GroupsPage: quizId type:', typeof quizId);
+    
+    // For all failed quizzes, try to find them in the database
+    // If it's a string ID, convert it to number or handle appropriately
+    const numericQuizId = typeof quizId === 'string' ? parseInt(quizId) : quizId;
+    console.log('🔍 GroupsPage: Converted numeric quiz ID:', numericQuizId);
+    
+    if (isNaN(numericQuizId)) {
+      console.error('❌ GroupsPage: Invalid quiz ID:', quizId);
+      alert('Invalid quiz ID. Please try again.');
+      return;
+    }
+
+    // Find the quiz in all groups
+    let foundQuiz: Quiz | undefined;
+    console.log('🔍 GroupsPage: Searching for quiz in groups:', groups);
+    
+    for (const group of groups) {
+      if (group.quizzes) {
+        foundQuiz = group.quizzes.find(quiz => quiz.id === numericQuizId);
+        if (foundQuiz) {
+          console.log('✅ GroupsPage: Found quiz in group:', foundQuiz);
+          break;
+        }
+      }
+    }
+
+    if (foundQuiz) {
+      // Navigate to modeselection with the found quiz
+      console.log('🚀 GroupsPage: Navigating to modeselection with found quiz:', foundQuiz);
+      navigate('/modeselection', { 
+        state: { 
+          topic: foundQuiz 
+        } 
+      });
+      setIsFailedAssessmentsModalOpen(false);
+    } else {
+      // If quiz not found in groups, try to fetch it directly from the API
+      console.log('⚠️ GroupsPage: Quiz not found in groups, creating mock quiz for ID:', numericQuizId);
+      
+      // Create a mock quiz object with the ID and navigate
+      const mockQuiz: Quiz = {
+        id: numericQuizId,
+        title: `Quiz ${numericQuizId}`,
+        description: 'Generated quiz from failed assessment',
+        created_at: new Date().toISOString()
+      };
+      
+      console.log('🚀 GroupsPage: Navigating to modeselection with mock quiz:', mockQuiz);
+      navigate('/modeselection', { 
+        state: { 
+          topic: mockQuiz 
+        } 
+      });
+      setIsFailedAssessmentsModalOpen(false);
+    }
   };
 
   if (loading) {
@@ -201,6 +298,16 @@ const GroupsPage: React.FC = () => {
                 {groups.find(g => g.id === selectedGroup)?.name}
               </h1>
             )}
+            <div className="flex justify-between items-center">
+              <div></div>
+              <button
+                onClick={() => setIsFailedAssessmentsModalOpen(true)}
+                className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 flex items-center"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Failed Assessments
+              </button>
+            </div>
           </div>
 
           {/* Topics List */}
@@ -264,6 +371,14 @@ const GroupsPage: React.FC = () => {
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUpload={handleUpload}
+      />
+
+      {/* Failed Assessments Modal */}
+      <FailedAssessmentsModal
+        isOpen={isFailedAssessmentsModalOpen}
+        onClose={() => setIsFailedAssessmentsModalOpen(false)}
+        failedTopics={failedTopics}
+        onStudyTopic={handleStudyFailedTopic}
       />
     </div>
   );

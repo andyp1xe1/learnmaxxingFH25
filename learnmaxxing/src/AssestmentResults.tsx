@@ -1,112 +1,249 @@
-
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { Trophy, Target, BookOpen, ArrowRight} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { apiService } from './services/api';
+import type { AssessmentResult } from './services/api';
+import { failedQuizzesService } from './services/failedQuizzesService';
+
+interface QuestionResult {
+    questionId: number;
+    success: boolean;
+    topicId: number;
+}
+
 function AssessmentResults(){
     const navigate = useNavigate();
-    const quizResults = 
-        [
-            {
-                "topic": "JavaScript's Origins and Creators",
-                "failurePercentage": 66.67,
-                "feedback": "Focus on Brendan Eich's role at Netscape and how JavaScript was conceived as a lightweight scripting language *distinct* from Java.",
-                "references": [
-                {
-                    "questionId": 1,
-                    "referenceTitle": "Mozilla Developer Network (MDN) - 'A re-introduction to JavaScript'",
-                    "paragraph": "Mozilla Developer Network (MDN) - 'A re-introduction to JavaScript'"
-                },
-                {
-                    "questionId": 3,
-                    "referenceTitle": "Mozilla Developer Network (MDN) - 'A Short History of JavaScript'",
-                    "paragraph": "Mozilla Developer Network (MDN) - 'A Short History of JavaScript'"
-                }
-                ]
-            },
-            {
-                "topic": "The Evolution and Modern Uses of JavaScript",
-                "failurePercentage": 50,
-                "feedback": "To improve, focus on understanding *how* JavaScript's evolution directly enabled and shaped its vast array of modern uses. Connect its historical development to its current practical applications.",
-                "references": [
-                {
-                    "questionId": 4,
-                    "referenceTitle": "MDN Web Docs: JavaScript history; Wikipedia: JavaScript",
-                    "paragraph": "MDN Web Docs: JavaScript history; Wikipedia: JavaScript"
-                }
-                ]
-            },
-            {
-                "topic": "JavaScript's Event Loop and Asynchronous Behavior",
-                "failurePercentage": 71.43,
-                "feedback": "Revisit how JavaScript handles asynchronous operations via the event loop, callback queue, and microtasks. Pay particular attention to the order of execution in asynchronous code.",
-                "references": [
-                {
-                    "questionId": 7,
-                    "referenceTitle": "MDN Web Docs - 'Concurrency model and Event Loop'",
-                    "paragraph": "The event loop is what allows JavaScript to perform non-blocking operations."
-                },
-                {
-                    "questionId": 9,
-                    "referenceTitle": "JavaScript.info - 'Event Loop'",
-                    "paragraph": "The JavaScript engine executes code, collects and processes events, and executes queued sub-tasks."
-                }
-                ]
-            },
-            {
-                "topic": "JavaScript Data Types and Type Coercion",
-                "failurePercentage": 40,
-                "feedback": "Review the distinctions between primitive and reference types and how type coercion works implicitly in equality comparisons.",
-                "references": [
-                {
-                    "questionId": 11,
-                    "referenceTitle": "MDN Web Docs - 'JavaScript data types and data structures'",
-                    "paragraph": "JavaScript types are dynamic; variables can hold any type at any time."
-                },
-                {
-                    "questionId": 12,
-                    "referenceTitle": "Eloquent JavaScript - 'Types and Type Coercion'",
-                    "paragraph": "JavaScript sometimes converts values implicitly when performing operations."
-                }
-                ]
-            },
-            {
-                "topic": "JavaScript Scope, Hoisting, and Closures",
-                "failurePercentage": 57.14,
-                "feedback": "Deepen your understanding of lexical scope, how variable hoisting affects declarations, and how closures maintain access to outer variables even after their scope has closed.",
-                "references": [
-                {
-                    "questionId": 14,
-                    "referenceTitle": "MDN Web Docs - 'Closures'",
-                    "paragraph": "A closure gives you access to an outer function’s scope from an inner function."
-                },
-                {
-                    "questionId": 15,
-                    "referenceTitle": "Eloquent JavaScript - 'Functions as Values'",
-                    "paragraph": "Closures capture and remember variables from their creation context."
-                }
-                ]
-            },
-            {
-                "topic": "DOM Manipulation and Events",
-                "failurePercentage": 30,
-                "feedback": "Brush up on the DOM tree structure, how to select and manipulate DOM elements, and event handling techniques including event bubbling and delegation.",
-                "references": [
-                {
-                    "questionId": 18,
-                    "referenceTitle": "MDN Web Docs - 'Introduction to the DOM'",
-                    "paragraph": "The Document Object Model represents a web page so that programs can change the document structure, style, and content."
-                },
-                {
-                    "questionId": 20,
-                    "referenceTitle": "JavaScript.info - 'Browser Events'",
-                    "paragraph": "Events are a core part of the DOM interaction model, with bubbling and capturing phases."
-                }
-                ]
-            }
-            ]
+    const location = useLocation();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [quizResults, setQuizResults] = useState<AssessmentResult[]>([]);
 
+    useEffect(() => {
+        const loadAssessmentResults = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Check if we have question results from ExamMode
+                if (location.state?.questionResults && location.state?.isGeneralAssessment) {
+                    console.log('Processing question results:', location.state.questionResults);
+                    
+                    // Call the API endpoint with the question results
+                    const results = await apiService.submitTopicFailureData(location.state.questionResults);
+                    console.log('API assessment results:', results);
+                    
+                    setQuizResults(results);
+                    
+                    // Store failed quizzes in localStorage
+                    const failedTopics = results
+                        .filter(result => result.failurePercentage > 30) // Consider failed if >30% failure rate
+                        .map(result => {
+                            // The API groups questions by topicId, but we need the actual quiz ID
+                            // For generated questions, the topicId is usually 1, but we need to find the actual quiz
+                            // Let's use the first failed question's ID as a reference to find the quiz
+                            const failedQuestions = location.state.questionResults.filter((qr: QuestionResult) => !qr.success);
+                            const firstFailedQuestionId = failedQuestions.length > 0 ? failedQuestions[0].questionId : 1;
+                            
+                            // For now, let's assume the quiz ID is the same as the topic ID
+                            // In a real implementation, we'd need to query the database to get the actual quiz ID
+                            const quizId = 1; // This should be the actual quiz ID from the database
+                            
+                            return {
+                                quizId: quizId,
+                                quizName: result.topic,
+                                score: Math.round(100 - result.failurePercentage),
+                                timestamp: new Date().toISOString(),
+                                isGenerated: true
+                            };
+                        });
+                    
+                    console.log('🔍 AssessmentResults: Failed topics to store:', failedTopics);
+                    
+                    if (failedTopics.length > 0) {
+                        failedQuizzesService.addFailedQuizzes(failedTopics);
+                        console.log('✅ AssessmentResults: Stored failed quizzes in localStorage');
+                    } else {
+                        console.log('📦 AssessmentResults: No failed topics to store');
+                    }
+                } else {
+                    // Fallback to hardcoded data if no results provided
+                    console.log('No question results provided, using fallback data');
+                    setQuizResults([
+                        {
+                            "topic": "JavaScript's Origins and Creators",
+                            "failurePercentage": 66.67,
+                            "feedback": "Focus on Brendan Eich's role at Netscape and how JavaScript was conceived as a lightweight scripting language *distinct* from Java.",
+                            "references": [
+                                {
+                                    "questionId": 1,
+                                    "referenceTitle": "Mozilla Developer Network (MDN) - 'A re-introduction to JavaScript'",
+                                    "paragraph": "Mozilla Developer Network (MDN) - 'A re-introduction to JavaScript'"
+                                },
+                                {
+                                    "questionId": 3,
+                                    "referenceTitle": "Mozilla Developer Network (MDN) - 'A Short History of JavaScript'",
+                                    "paragraph": "Mozilla Developer Network (MDN) - 'A Short History of JavaScript'"
+                                }
+                            ]
+                        },
+                        {
+                            "topic": "The Evolution and Modern Uses of JavaScript",
+                            "failurePercentage": 50,
+                            "feedback": "To improve, focus on understanding *how* JavaScript's evolution directly enabled and shaped its vast array of modern uses. Connect its historical development to its current practical applications.",
+                            "references": [
+                                {
+                                    "questionId": 4,
+                                    "referenceTitle": "MDN Web Docs: JavaScript history; Wikipedia: JavaScript",
+                                    "paragraph": "MDN Web Docs: JavaScript history; Wikipedia: JavaScript"
+                                }
+                            ]
+                        },
+                        {
+                            "topic": "JavaScript's Event Loop and Asynchronous Behavior",
+                            "failurePercentage": 71.43,
+                            "feedback": "Revisit how JavaScript handles asynchronous operations via the event loop, callback queue, and microtasks. Pay particular attention to the order of execution in asynchronous code.",
+                            "references": [
+                                {
+                                    "questionId": 7,
+                                    "referenceTitle": "MDN Web Docs - 'Concurrency model and Event Loop'",
+                                    "paragraph": "The event loop is what allows JavaScript to perform non-blocking operations."
+                                },
+                                {
+                                    "questionId": 9,
+                                    "referenceTitle": "JavaScript.info - 'Event Loop'",
+                                    "paragraph": "The JavaScript engine executes code, collects and processes events, and executes queued sub-tasks."
+                                }
+                            ]
+                        },
+                        {
+                            "topic": "JavaScript Data Types and Type Coercion",
+                            "failurePercentage": 40,
+                            "feedback": "Review the distinctions between primitive and reference types and how type coercion works implicitly in equality comparisons.",
+                            "references": [
+                                {
+                                    "questionId": 11,
+                                    "referenceTitle": "MDN Web Docs - 'JavaScript data types and data structures'",
+                                    "paragraph": "JavaScript types are dynamic; variables can hold any type at any time."
+                                },
+                                {
+                                    "questionId": 12,
+                                    "referenceTitle": "Eloquent JavaScript - 'Types and Type Coercion'",
+                                    "paragraph": "JavaScript sometimes converts values implicitly when performing operations."
+                                }
+                            ]
+                        },
+                        {
+                            "topic": "JavaScript Scope, Hoisting, and Closures",
+                            "failurePercentage": 57.14,
+                            "feedback": "Deepen your understanding of lexical scope, how variable hoisting affects declarations, and how closures maintain access to outer variables even after their scope has closed.",
+                            "references": [
+                                {
+                                    "questionId": 14,
+                                    "referenceTitle": "MDN Web Docs - 'Closures'",
+                                    "paragraph": "A closure gives you access to an outer function's scope from an inner function."
+                                },
+                                {
+                                    "questionId": 15,
+                                    "referenceTitle": "Eloquent JavaScript - 'Functions as Values'",
+                                    "paragraph": "Closures capture and remember variables from their creation context."
+                                }
+                            ]
+                        },
+                        {
+                            "topic": "DOM Manipulation and Events",
+                            "failurePercentage": 30,
+                            "feedback": "Brush up on the DOM tree structure, how to select and manipulate DOM elements, and event handling techniques including event bubbling and delegation.",
+                            "references": [
+                                {
+                                    "questionId": 18,
+                                    "referenceTitle": "MDN Web Docs - 'Introduction to the DOM'",
+                                    "paragraph": "The Document Object Model represents a web page so that programs can change the document structure, style, and content."
+                                },
+                                {
+                                    "questionId": 20,
+                                    "referenceTitle": "JavaScript.info - 'Browser Events'",
+                                    "paragraph": "Events are a core part of the DOM interaction model, with bubbling and capturing phases."
+                                }
+                            ]
+                        }
+                    ]);
+                }
+            } catch (err) {
+                console.error('Error loading assessment results:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load assessment results');
+                
+                // Fallback to hardcoded data on error
+                setQuizResults([
+                    {
+                        "topic": "Assessment Results",
+                        "failurePercentage": 50,
+                        "feedback": "Unable to load detailed results. Please try again later.",
+                        "references": []
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadAssessmentResults();
+    }, [location.state]);
+
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 p-4 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Analyzing your results...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 p-4">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-8 mt-7">
+                        <div className="flex items-center justify-center mb-4">
+                            <div className="w-16 h-16 bg-gradient-to-r from-red-600 to-red-400 rounded-full flex items-center justify-center">
+                                <Target className="w-8 h-8 text-white" />
+                            </div>
+                        </div>
+                        <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent mb-2">
+                            Assessment Error
+                        </h1>
+                        <p className="text-gray-600 text-lg">
+                            Unable to load your assessment results
+                        </p>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-red-100">
+                        <div className="text-center">
+                            <p className="text-red-600 mb-6 text-lg">Error: {error}</p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <button 
+                                    onClick={() => window.location.reload()} 
+                                    className="bg-gradient-to-r from-purple-600 to-orange-400 hover:from-purple-700 hover:to-orange-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200"
+                                >
+                                    Retry
+                                </button>
+                                <button 
+                                    onClick={() => navigate('/exammode', { state: location.state })} 
+                                    className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200"
+                                >
+                                    Back to Exam
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const data = quizResults;
 
@@ -251,20 +388,6 @@ function AssessmentResults(){
                         dangerouslySetInnerHTML={{ __html: formatFeedback(item.feedback) }}
                         />
                     </div>
-                    {item.references && item.references.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                        <h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">
-                            Study References
-                        </h4>
-                        <div className="space-y-1">
-                            {item.references.map((ref, refIndex) => (
-                            <div key={refIndex} className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                                <span className="font-medium">Q{ref.questionId}:</span> {ref.referenceTitle}
-                            </div>
-                            ))}
-                        </div>
-                        </div>
-                    )}
                     </div>
                 );
                 })}
@@ -325,7 +448,31 @@ function AssessmentResults(){
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
-            <button onClick={() => navigate('/modeselection')} className="bg-gradient-to-r from-purple-600 to-orange-400 hover:from-purple-700 hover:to-orange-500 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center">
+            <button onClick={() => {
+                // Get failed topics from original question results
+                const failedTopics = location.state?.questionResults 
+                    ? Array.from(new Set(
+                        location.state.questionResults
+                            .filter((result: QuestionResult) => !result.success)
+                            .map((result: QuestionResult) => result.topicId)
+                        )).map((topicId: unknown) => ({
+                            topicId: topicId as number,
+                            topicName: quizData.find(item => item.fullTopic.includes((topicId as number).toString()))?.fullTopic || `Topic ${topicId}`,
+                            score: quizData.find(item => item.fullTopic.includes((topicId as number).toString()))?.score || 0
+                        }))
+                    : quizData.filter(item => item.score < 70).map(item => ({
+                        topicId: parseInt(item.fullTopic.match(/\d+/)?.[0] || '1'),
+                        topicName: item.fullTopic,
+                        score: item.score
+                    }));
+
+                navigate('/groups', { 
+                    state: { 
+                        showFailedAssessments: true,
+                        failedTopics: failedTopics
+                    }
+                });
+            }} className="bg-gradient-to-r from-purple-600 to-orange-400 hover:from-purple-700 hover:to-orange-500 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center">
             <BookOpen className="w-5 h-5 mr-2" />
             Study Weak Areas
             <ArrowRight className="w-5 h-5 ml-2" />

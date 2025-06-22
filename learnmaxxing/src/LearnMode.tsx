@@ -7,9 +7,9 @@ import type { Question } from './services/api';
 interface Flashcard {
     id: number;
     question: string;
-    answer: string;
-    context: string;
-    source: string;
+    answer: string;        // The actual answer text (not just A, B, C)
+    context: string;       // The explanation/context
+    source: string;        // The source/topic
 }
 
 interface DifficultyResponse {
@@ -46,13 +46,19 @@ function LearnMode() {
                 const questionsData = await apiService.getQuizQuestions(topic.id);
                 
                 // Transform the data to match the expected format
-                const transformedFlashcards: Flashcard[] = questionsData.map((q: Question) => ({
-                    id: q.id,
-                    question: q.question_json.question,
-                    answer: q.question_json.correctAnswer,
-                    context: q.explanation || 'No additional context available',
-                    source: topic.title
-                }));
+                const transformedFlashcards: Flashcard[] = questionsData.map((q: Question) => {
+                    // Get the actual answer text from answerOptions using correctAnswer letter
+                    const correctAnswerLetter = q.question_json.correctAnswer;
+                    const actualAnswerText = q.question_json.answerOptions[correctAnswerLetter as keyof typeof q.question_json.answerOptions];
+                    
+                    return {
+                        id: q.id,
+                        question: q.question_json.question,
+                        answer: actualAnswerText || q.question_json.correctAnswer, // Use actual text, fallback to letter
+                        context: q.explanation || 'No additional context available',
+                        source: topic.title
+                    };
+                });
                 
                 setFlashcards(transformedFlashcards);
             } catch (err) {
@@ -296,7 +302,7 @@ function LearnMode() {
                                         </p>
                                     </div>
                                     <div className="bg-green-100 rounded-2xl p-4 mb-4">
-                                        <h3 className="font-playfair font-semibold text-green-800 mb-2">Context</h3>
+                                        <h3 className="font-playfair font-semibold text-green-800 mb-2">Explanation</h3>
                                         <p className="font-inter text-sm text-green-700">
                                             {flashcards[currentCardIndex].context}
                                         </p>
