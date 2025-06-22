@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
+import { apiService } from './services/api';
+
+interface Question {
+    id: number;
+    question: string;
+    options: {
+        A: string;
+        B: string;
+        C: string;
+    };
+    correctAnswer: string;
+    explanation?: string;
+}
 
 function ExamMode(){
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -7,40 +21,97 @@ function ExamMode(){
     const [showResult, setShowResult] = useState(false);
     const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
     const [score, setScore] = useState(0);
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    
+    const location = useLocation();
+    const navigate = useNavigate();
 
-    // Placeholder data - replace with database calls
-    const questions = [
-        {
-        id: 1,
-        question: "Which organelle is responsible for protein synthesis in cells?",
-        options: {
-            A: "Mitochondria",
-            B: "Ribosomes",
-            C: "Nucleus",
-            D: "Golgi apparatus"
-        },
-        correctAnswer: "B"
-        },
-        {
-        id: 2,
-        question: "What is the chemical formula for water?",
-        options: {
-            A: "CO2",
-            B: "NaCl",
-            C: "H2O",
-            D: "O2"
-        },
-    correctAnswer: "C"
-        }
-    ];
+    // Load questions when component mounts
+    useEffect(() => {
+        const loadQuestions = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Check if we have state from FileUploadModal with generated questions
+                if (location.state?.questions) {
+                    console.log('Using questions from upload:', location.state.questions);
+                    const questionsFromUpload = location.state.questions.map((q: any, index: number) => ({
+                        id: q.id || index + 1,
+                        question: q.question_json?.question || q.question,
+                        options: q.question_json?.answerOptions || q.answerOptions || q.options,
+                        correctAnswer: q.question_json?.correctAnswer || q.correctAnswer,
+                        explanation: q.explanation
+                    }));
+                    setQuestions(questionsFromUpload);
+                } 
+                // Check if we have selected topics from topic selection
+                else if (location.state?.selectedTopics) {
+                    console.log('Generating questions for selected topics:', location.state.selectedTopics);
+                    
+                    // Prepare selections for the generate-questions endpoint
+                    const selections = location.state.selectedTopics.flatMap((topic: any) => 
+                        topic.contentIds.map((contentId: number) => ({
+                            groupId: location.state.groupId || 1, // fallback to groupId 1
+                            topicId: topic.topicId,
+                            contentId: contentId
+                        }))
+                    );
+                    
+                    console.log('API selections:', selections);
+                    const response = await apiService.generateQuestions(selections);
+                    console.log('Generated questions response:', response);
+                    
+                    // Transform response to match our Question interface
+                    const transformedQuestions = response.map((q: any, index: number) => ({
+                        id: q.id || index + 1,
+                        question: q.question_json?.question || q.question,
+                        options: q.question_json?.answerOptions || q.answerOptions || q.options,
+                        correctAnswer: q.question_json?.correctAnswer || q.correctAnswer,
+                        explanation: q.explanation
+                    }));
+                    
+                    setQuestions(transformedQuestions);
+                }
+                // Check if we have a specific topic/quiz to load
+                else if (location.state?.topic) {
+                    console.log('Loading questions for topic:', location.state.topic);
+                    const topicQuestions = await apiService.getQuizQuestions(location.state.topic.id);
+                    
+                    // Transform questions to match our interface
+                    const transformedQuestions = topicQuestions.map((q) => ({
+                        id: q.id,
+                        question: q.question_json.question,
+                        options: q.question_json.answerOptions,
+                        correctAnswer: q.question_json.correctAnswer,
+                        explanation: q.explanation
+                    }));
+                    
+                    setQuestions(transformedQuestions);
+                } else {
+                    throw new Error('No questions or topic provided');
+                }
+                
+            } catch (err) {
+                console.error('Error loading questions:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load questions');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadQuestions();
+    }, [location.state]);
 
     // Timer effect
     useEffect(() => {
-        if (timeLeft > 0 && !showResult) {
+        if (timeLeft > 0 && !showResult && questions.length > 0) {
         const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
         return () => clearTimeout(timer);
         }
-    }, [timeLeft, showResult]);
+    }, [timeLeft, showResult, questions.length]);
 
     const formatTime = (seconds:number) => {
         const minutes = Math.floor(seconds / 60);
@@ -74,7 +145,10 @@ function ExamMode(){
         <div className="max-w-4xl mx-auto">
           {/* Header */}
         <div className="flex items-center justify-between mb-8">
-            <BackButton to='/modeselection' />
+            <BackButton 
+                to={location.state?.fromUpload ? '/groups' : '/modeselection'} 
+                state={location.state?.fromUpload ? undefined : { topic: location.state?.topic }}
+            />
             <h1 className="text-4xl font-playfair font-bold bg-[linear-gradient(to_right,#6a29ab,#fca95b)] bg-clip-text text-transparent">
                 Exam Mode
             </h1>
@@ -99,6 +173,38 @@ function ExamMode(){
             </div>
 
           {/* Question Card */}
+            {loading ? (
+              <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading questions...</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-red-600 mb-4">Error: {error}</p>
+                  <button 
+                    onClick={() => navigate(-1)} 
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            ) : questions.length === 0 ? (
+              <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">No questions available</p>
+                  <button 
+                    onClick={() => navigate(-1)} 
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            ) : (
             <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8">
             <h2 className="text-2xl font-playfair font-bold mb-6 text-gray-800">
                 {questions[currentQuestion].question}
@@ -156,6 +262,7 @@ function ExamMode(){
                 })}
             </div>
             </div>
+            )}
 
           {/* Next Button */}
             <div className="flex justify-center">

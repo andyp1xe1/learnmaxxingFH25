@@ -1,62 +1,128 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FileUploadModal from './FileUploadModal';
+import { apiService } from './services/api';
+import type { Quiz, Group } from './services/api';
 
-interface Group {
-  id: string;
-  name: string;
+interface GroupWithQuizzes extends Group {
+  quizzes?: Quiz[];
   topicsCount: number;
-}
-
-interface Topic {
-  id: string;
-  title: string;
-  description: string;
-  completionPercentage: number;
-  category: string;
 }
 
 const GroupsPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [groups, setGroups] = useState<GroupWithQuizzes[]>([]);
+  const [selectedGroupQuizzes, setSelectedGroupQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Sample data - replace with actual data from your backend
-  const groups: Group[] = [
-    { id: '1', name: 'Mathematics', topicsCount: 12 },
-    { id: '2', name: 'Computer Science', topicsCount: 8 },
-    { id: '3', name: 'Physics', topicsCount: 15 },
-    { id: '4', name: 'Literature', topicsCount: 6 },
-    { id: '5', name: 'History', topicsCount: 10 },
-  ];
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const groupsData = await apiService.getGroups();
+        
+        // Get quiz counts for each group
+        const groupsWithCounts: GroupWithQuizzes[] = await Promise.all(
+          groupsData.map(async (group) => {
+            try {
+              const quizzes = await apiService.getGroupQuizzes(group.id);
+              return {
+                ...group,
+                topicsCount: quizzes.length,
+                quizzes
+              };
+            } catch (err) {
+              console.warn(`Failed to fetch quizzes for group ${group.id}:`, err);
+              return {
+                ...group,
+                topicsCount: 0,
+                quizzes: []
+              };
+            }
+          })
+        );
+        
+        setGroups(groupsWithCounts);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const topics: Topic[] = [
-    { id: '1', title: 'Calculus Fundamentals', description: 'Learn the basics of differential and integral calculus', completionPercentage: 85, category: '1' },
-    { id: '2', title: 'Linear Algebra', description: 'Vectors, matrices, and linear transformations', completionPercentage: 60, category: '1' },
-    { id: '3', title: 'Probability Theory', description: 'Understanding probability distributions and statistics', completionPercentage: 30, category: '1' },
-    { id: '4', title: 'Data Structures', description: 'Arrays, linked lists, trees, and graphs', completionPercentage: 90, category: '2' },
-    { id: '5', title: 'Algorithms', description: 'Sorting, searching, and optimization algorithms', completionPercentage: 45, category: '2' },
-    { id: '6', title: 'Database Design', description: 'Relational databases and SQL fundamentals', completionPercentage: 70, category: '2' },
-  ];
+    fetchData();
+  }, []);
+
+  // Fetch quizzes when a group is selected
+  useEffect(() => {
+    const fetchGroupQuizzes = async () => {
+      if (selectedGroup) {
+        try {
+          const quizzes = await apiService.getGroupQuizzes(selectedGroup);
+          setSelectedGroupQuizzes(quizzes);
+        } catch (err) {
+          console.error('Failed to fetch group quizzes:', err);
+          setSelectedGroupQuizzes([]);
+        }
+      } else {
+        setSelectedGroupQuizzes([]);
+      }
+    };
+
+    fetchGroupQuizzes();
+  }, [selectedGroup]);
 
   const filteredTopics = selectedGroup 
-    ? topics.filter(topic => topic.category === selectedGroup)
+    ? selectedGroupQuizzes
     : [];
 
   const handleUpload = async (files: File[]) => {
     console.log('Files to upload:', files);
-    // Handle file upload logic here
+    // This is now handled by the FileUploadModal component
+    // The modal will show the topic selection after processing
   };
 
-  const handleTopicClick = (topicId: string) => {
-    const selectedTopic = topics.find(topic => topic.id === topicId);
+  const handleTopicClick = (topicId: number) => {
+    const selectedTopic = selectedGroupQuizzes.find((quiz: Quiz) => quiz.id === topicId);
+    // Always navigate to modeselection from GroupsPage
     navigate('/modeselection', { 
       state: { 
         topic: selectedTopic 
       } 
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading groups...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const RoundPlusButton = () => (
     <button
@@ -139,7 +205,7 @@ const GroupsPage: React.FC = () => {
 
           {/* Topics List */}
           <div className="space-y-4">
-            {filteredTopics.map((topic) => (
+            {filteredTopics.map((topic: Quiz) => (
               <div
                 key={topic.id}
                 onClick={() => handleTopicClick(topic.id)}
@@ -150,22 +216,14 @@ const GroupsPage: React.FC = () => {
                     {topic.title}
                   </h3>
                   <p className="text-gray-600 text-sm font-inter">
-                    {topic.description}
+                    {topic.description || 'No description available'}
                   </p>
                 </div>
 
-                {/* Percentage */}
+                {/* Date */}
                 <div className="ml-6">
-                  <span className={`
-                    text-lg font-bold px-4 py-2 rounded-full font-inter
-                    ${topic.completionPercentage >= 80 
-                      ? 'bg-green-100 text-green-800' 
-                      : topic.completionPercentage >= 50
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }
-                  `}>
-                    {topic.completionPercentage}%
+                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-inter">
+                    {new Date(topic.created_at).toLocaleDateString()}
                   </span>
                 </div>
               </div>

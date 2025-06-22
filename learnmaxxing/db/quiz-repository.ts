@@ -36,6 +36,19 @@ export class QuizRepository extends BaseRepository {
   }
 
   /**
+   * Get all quizzes that have questions
+   */
+  async findAllWithQuestions(): Promise<Quiz[]> {
+    const query = `
+      SELECT DISTINCT q.* 
+      FROM quiz q 
+      INNER JOIN question qu ON q.id = qu.quiz_id 
+      ORDER BY q.created_at DESC
+    `;
+    return this.findMany<Quiz>(query);
+  }
+
+  /**
    * Search quizzes by title
    */
   async findByTitle(title: string): Promise<Quiz | null> {

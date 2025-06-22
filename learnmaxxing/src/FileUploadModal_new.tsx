@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import extractTextFromPDF from 'pdf-parser-client-side';
 import { apiService } from './services/api';
 import TopicSelectionModal from './components/TopicSelectionModal';
@@ -39,7 +38,6 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
   const [suggestedGroups, setSuggestedGroups] = useState<Group[]>([]);
   const [isGeneratingQuizzes, setIsGeneratingQuizzes] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -156,11 +154,6 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
 
       // Show topic selection modal
       setShowTopicModal(true);
-
-      // Call the onUpload callback if provided
-      if (onUpload) {
-        onUpload(uploadedFiles.map(f => f.file));
-      }
       
     } catch (error) {
       console.error('Upload and analysis failed:', error);
@@ -186,31 +179,17 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClose, onUp
     try {
       console.log('Generating quizzes for selected topics:', selectedTopics);
       
-      // Prepare selections for the generate-questions endpoint
-      // Each selection needs groupId, topicId, and contentId
-      const selections = selectedTopics.flatMap(topic => 
-        topic.contentIds.map(contentId => ({
-          groupId: suggestedGroups.find(group => 
-            group.topics.some(t => t.topicId === topic.topicId)
-          )?.groupId || 1, // fallback to groupId 1
-          topicId: topic.topicId,
-          contentId: contentId
-        }))
-      );
-      
-      console.log('Formatted selections for API:', selections);
+      // Prepare selections for the generate-questions endpoint using the same logic as PDFUploader
+      const selections = selectedTopics.map(topic => ({
+        topicId: topic.topicId,
+        topicName: topic.topicName,
+        contentIds: topic.contentIds
+      }));
       
       const response = await apiService.generateQuestions(selections);
       console.log('Quiz generation response:', response);
       
-      // Navigate directly to ExamMode with the generated questions
-      navigate('/exammode', { 
-        state: { 
-          questions: response, // The API returns questions directly
-          fromUpload: true,
-          selectedTopics: selectedTopics
-        } 
-      });
+      alert(`Successfully generated quizzes for ${selectedTopics.length} topic(s)! Check the Groups page to view them.`);
       
       // Reset and close modals
       setShowTopicModal(false);

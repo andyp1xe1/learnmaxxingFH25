@@ -37,7 +37,13 @@ export class GroupRepository extends BaseRepository {
    * Get all groups
    */
   async findAll(): Promise<Group[]> {
-    const query = "SELECT * FROM topic_group ORDER BY created_at DESC";
+    const query = `
+      SELECT DISTINCT tg.* 
+      FROM topic_group tg 
+      INNER JOIN quiz q ON tg.id = q.group_id 
+      INNER JOIN question qu ON q.id = qu.quiz_id 
+      ORDER BY tg.created_at DESC
+    `;
     return this.findMany<Group>(query);
   }
 
@@ -70,10 +76,16 @@ export class GroupRepository extends BaseRepository {
   }
 
   /**
-   * Get all quizzes for a group
+   * Get all quizzes for a group that have questions
    */
   async getQuizzes(groupId: number): Promise<any[]> {
-    const query = "SELECT * FROM quiz WHERE group_id = ? ORDER BY created_at DESC";
+    const query = `
+      SELECT DISTINCT q.* 
+      FROM quiz q 
+      INNER JOIN question qu ON q.id = qu.quiz_id 
+      WHERE q.group_id = ? 
+      ORDER BY q.created_at DESC
+    `;
     return this.findMany(query, [groupId]);
   }
 }

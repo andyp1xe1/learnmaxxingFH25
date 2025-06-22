@@ -4,20 +4,39 @@ import { useState } from 'react';
 import React from 'react';
 import { Brain } from 'lucide-react';
 import BackButton from './BackButton';
+import { apiService } from './services/api';
+
 type LogInProps = {
     onLogin: (credentials: { username: string; password: string }) => void;
     };
 function LogIn({ onLogin}:LogInProps){
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e:React.FormEvent) => {
-    e.preventDefault();
-    if (username.trim() && password.trim()) {
-        onLogin({ username, password });
-        navigate('/dashboard');
-    }
+    const handleSubmit = async (e:React.FormEvent) => {
+        e.preventDefault();
+        if (!username.trim() || !password.trim()) {
+            setError('Please enter both username and password');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            await apiService.login(username, password);
+            onLogin({ username, password });
+            
+            // Navigate to main app after successful login
+            navigate('/groups');
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Login failed');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -45,6 +64,12 @@ function LogIn({ onLogin}:LogInProps){
 
         {/* Form */}
         <div className="space-y-6">
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+                    {error}
+                </div>
+            )}
+            
             <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2 font-inter">
                 Username
@@ -57,6 +82,7 @@ function LogIn({ onLogin}:LogInProps){
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter"
                 placeholder="Enter your username"
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
+                disabled={loading}
             />
             </div>
 
@@ -72,14 +98,16 @@ function LogIn({ onLogin}:LogInProps){
                 className="mb-5 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter"
                 placeholder="Enter your password"
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
+                disabled={loading}
             />
             </div>
 
             <button
             onClick={handleSubmit}
-            className="w-full bg-[linear-gradient(to_right,#6a29ab,#fca95b)] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter"
+            disabled={loading}
+            className="w-full bg-[linear-gradient(to_right,#6a29ab,#fca95b)] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-            Sign In
+            {loading ? 'Signing In...' : 'Sign In'}
             </button>
         </div>
 

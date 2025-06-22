@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiService } from './services/api';
 
 interface QuizQuestion {
     question: string;
@@ -27,21 +28,15 @@ function QuizGenerator() {
         setError('');
 
         try {
-            const response = await fetch('/api/quiz/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ content }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to generate quiz');
+            const data = await apiService.generateTopicsAndQuizzes(content);
+            
+            // Extract questions from the response structure
+            if (data.quizzes && data.quizzes.length > 0) {
+                const allQuestions = data.quizzes.flatMap((quiz: any) => quiz.questions || []);
+                setQuestions(allQuestions);
+            } else {
+                setError('No questions were generated. Please try with different content.');
             }
-
-            setQuestions(data);
         } catch (error) {
             setError(error instanceof Error ? error.message : 'An unknown error occurred');
         } finally {

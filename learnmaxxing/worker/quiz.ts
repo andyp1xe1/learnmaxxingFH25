@@ -101,7 +101,15 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
         },
       });
 
-      const quizQuestions: QuizQuestion[] = JSON.parse(quizResponse.text || "[]");      // 4. Save new quiz to DB with group reference
+      const quizQuestions: QuizQuestion[] = JSON.parse(quizResponse.text || "[]");
+
+      // Only create quiz if we have questions
+      if (quizQuestions.length === 0) {
+        console.log(`⏭️ Skipping topic "${topic}" - no questions generated`);
+        continue;
+      }
+
+      // 4. Save new quiz to DB with group reference
       const quiz = await repos.quizzes.create({
         title: topic,
         description: `Quiz on the topic: ${topic}`,

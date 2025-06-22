@@ -127,7 +127,42 @@ app.get('/api/protected/profile', async (c) => {
 // Public quiz endpoints (no auth required)
 app.get('/api/quizzes', async (c) => {
   const repos = createRepositories(c.env.DB);
-  const quizzes = await repos.quizzes.findAll();
+  const quizzes = await repos.quizzes.findAllWithQuestions();
+  return c.json(quizzes);
+})
+
+// Groups endpoints
+app.get('/api/groups', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const groups = await repos.groups.findAll();
+  return c.json(groups);
+})
+
+app.get('/api/groups/:id', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const groupId = parseInt(c.req.param('id'));
+  
+  if (isNaN(groupId)) {
+    return c.json({ error: "Invalid group ID" }, 400);
+  }
+  
+  const group = await repos.groups.findById(groupId);
+  if (!group) {
+    return c.json({ error: "Group not found" }, 404);
+  }
+  
+  return c.json(group);
+})
+
+app.get('/api/groups/:id/quizzes', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const groupId = parseInt(c.req.param('id'));
+  
+  if (isNaN(groupId)) {
+    return c.json({ error: "Invalid group ID" }, 400);
+  }
+  
+  const quizzes = await repos.groups.getQuizzes(groupId);
   return c.json(quizzes);
 })
 
@@ -222,109 +257,6 @@ app.post('/api/topics/failure-percentage', async (c) => {
           questionId,
           referenceTitle: ref?.title || "Unknown",
           paragraph: rq.paragraph
-/*
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-
-// Define environment variables
-interface Env {
-  // Add your environment variables here
-  // Example: R2_BUCKET: R2Bucket;
-}
-
-// Define upload result types
-interface UploadSuccess {
-  filename: string;
-  success: true;
-  size: number;
-  type: string;
-}
-
-interface UploadError {
-  filename: string;
-  success: false;
-  error: string;
-}
-
-type UploadResult = UploadSuccess | UploadError;
-
-// Create Hono app
-const app = new Hono<{ Bindings: Env }>();
-
-// Add CORS middleware
-app.use('*', cors({
-  origin: ['http://localhost:5173', 'http://localhost:4173'], // Add your frontend URLs
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Health check endpoint
-app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', message: 'Worker is running' });
-});
-
-// File upload endpoint
-app.post('/api/upload', async (c) => {
-  try {
-    const formData = await c.req.formData();
-    const files = formData.getAll('file') as File[];
-    
-    if (!files || files.length === 0) {
-      return c.json({ error: 'No files provided' }, 400);
-    }
-
-    const uploadResults: UploadResult[] = [];
-
-    for (const file of files) {
-      // Validate file type
-      const validTypes = ['text/plain', 'application/pdf'];
-      if (!validTypes.includes(file.type)) {
-        uploadResults.push({
-          filename: file.name,
-          success: false,
-          error: 'Invalid file type. Only PDF and TXT files are allowed.'
-        });
-        continue;
-      }
-
-      // Validate file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        uploadResults.push({
-          filename: file.name,
-          success: false,
-          error: 'File too large. Maximum size is 10MB.'
-        });
-        continue;
-      }
-
-      try {
-        // Here you would typically:
-        // 1. Upload to R2 bucket
-        // 2. Store metadata in D1 database
-        // 3. Process the file content
-        
-        // Placeholder implementation
-        const fileContent = await file.text();
-        
-        // Simulate processing delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        uploadResults.push({
-          filename: file.name,
-          success: true,
-          size: file.size,
-          type: file.type,
-          // Add any additional metadata you want to return
-        });
-        
-      } catch (error) {
-        uploadResults.push({
-          filename: file.name,
-          success: false,
-          error: 'Failed to process file'
->>>>>>> ab41b2e (feat: Add drag-and-drop file upload modal with Tailwind CSS v4)
- */
         });
       }
     }
