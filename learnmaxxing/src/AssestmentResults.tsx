@@ -2,6 +2,8 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { Trophy, Target, BookOpen, ArrowRight} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { apiService } from './services/api';
 function AssessmentResults(){
     const navigate = useNavigate();
     const quizResults = 
