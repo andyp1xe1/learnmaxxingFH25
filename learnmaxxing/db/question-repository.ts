@@ -1,5 +1,6 @@
 import { BaseRepository } from "./base-repository";
 import type { Question, NewQuestion } from "./types";
+import type { SM2Question, SM2Result, Quality } from "../worker/sm2";
 
 export class QuestionRepository extends BaseRepository {
   /**
@@ -120,5 +121,120 @@ export class QuestionRepository extends BaseRepository {
       [quizId]
     );
     return result?.count || 0;
+  }
+
+  // SM2 Spaced Repetition Methods
+
+  /**
+   * Get question with SM2 data
+   */
+  async findByIdWithSM2(id: number): Promise<SM2Question | null> {
+    const question = await this.findOne<any>(
+      "SELECT id, ef, interval, repetition_count, next_review_date FROM question WHERE id = ?",
+      [id]
+    );
+    
+    if (!question) return null;
+    
+    return {
+      id: question.id,
+      ef: question.ef || 2.5,
+      interval: question.interval || 0,
+      repetition_count: question.repetition_count || 0,
+      next_review_date: question.next_review_date
+    };
+  }
+
+  /**
+   * Update question SM2 parameters
+   */
+  async updateSM2Params(result: SM2Result): Promise<boolean> {
+    const query = `
+      UPDATE question 
+      SET ef = ?, interval = ?, repetition_count = ?, next_review_date = ?
+      WHERE id = ?
+    `;
+    
+    const affected = await this.update(query, [
+      result.ef,
+      result.interval,
+      result.repetition_count,
+      result.next_review_date,
+      result.question_id
+    ]);
+    
+    return affected > 0;
+  }
+
+  /**
+   * Get questions due for review for a specific user
+   */
+  async getQuestionsDueForReview(userId: number): Promise<SM2Question[]> {
+    const now = new Date().toISOString();
+    
+    const questions = await this.findMany<any>(`
+      SELECT DISTINCT q.id, q.ef, q.interval, q.repetition_count, q.next_review_date
+      FROM question q
+      LEFT JOIN user_question_performance uqp ON q.id = uqp.question_id AND uqp.user_id = ?
+      WHERE q.next_review_date IS NULL OR q.next_review_date <= ?
+      ORDER BY q.next_review_date ASC NULLS FIRST
+    `, [userId, now]);
+    
+    return questions.map(q => ({
+      id: q.id,
+      ef: q.ef || 2.5,
+      interval: q.interval || 0,
+      repetition_count: q.repetition_count || 0,
+      next_review_date: q.next_review_date
+    }));
+  }
+
+  /**
+   * Get overdue questions for a specific user
+   */
+  async getOverdueQuestions(userId: number): Promise<SM2Question[]> {
+    const now = new Date().toISOString();
+    
+    const questions = await this.findMany<any>(`
+      SELECT DISTINCT q.id, q.ef, q.interval, q.repetition_count, q.next_review_date
+      FROM question q
+      LEFT JOIN user_question_performance uqp ON q.id = uqp.question_id AND uqp.user_id = ?
+      WHERE q.next_review_date IS NOT NULL AND q.next_review_date < ?
+      ORDER BY q.next_review_date ASC
+    `, [userId, now]);
+    
+    return questions.map(q => ({
+      id: q.id,
+      ef: q.ef || 2.5,
+      interval: q.interval || 0,
+      repetition_count: q.repetition_count || 0,
+      next_review_date: q.next_review_date
+    }));
+  }
+
+  /**
+   * Get questions due today for a specific user
+   */
+  async getQuestionsDueToday(userId: number): Promise<SM2Question[]> {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const tomorrowStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+    
+    const questions = await this.findMany<any>(`
+      SELECT DISTINCT q.id, q.ef, q.interval, q.repetition_count, q.next_review_date
+      FROM question q
+      LEFT JOIN user_question_performance uqp ON q.id = uqp.question_id AND uqp.user_id = ?
+      WHERE q.next_review_date IS NULL 
+         OR (q.next_review_date >= ? AND q.next_review_date < ?)
+      ORDER BY q.next_review_date ASC NULLS FIRST
+    `, [userId, todayStart, tomorrowStart]);
+    
+    return questions.map(q => ({
+      id: q.id,
+      ef: q.ef || 2.5,
+      interval: q.interval || 0,
+      repetition_count: q.repetition_count || 0,
+      next_review_date: q.next_review_date
+    }));
   }
 }

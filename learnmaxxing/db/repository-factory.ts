@@ -6,6 +6,7 @@ import { QuestionRepository } from "./question-repository";
 import { ReferenceRepository } from "./reference-repository";
 import { ReferenceQuestionRepository } from "./reference-question-repository";
 import { GroupRepository } from "./group-repository";
+import { UserQuestionPerformanceRepository } from "./user-question-performance-repository";
 
 /**
  * Repository factory that provides access to all repository instances
@@ -20,6 +21,7 @@ export class RepositoryFactory {
   private _referenceRepository?: ReferenceRepository;
   private _referenceQuestionRepository?: ReferenceQuestionRepository;
   private _groupRepository?: GroupRepository;
+  private _userQuestionPerformanceRepository?: UserQuestionPerformanceRepository;
 
   constructor(db: D1Database) {
     this.db = db;
@@ -72,6 +74,13 @@ export class RepositoryFactory {
       this._groupRepository = new GroupRepository(this.db);
     }
     return this._groupRepository;
+  }
+
+  get userQuestionPerformance(): UserQuestionPerformanceRepository {
+    if (!this._userQuestionPerformanceRepository) {
+      this._userQuestionPerformanceRepository = new UserQuestionPerformanceRepository(this.db);
+    }
+    return this._userQuestionPerformanceRepository;
   }
 }
 
