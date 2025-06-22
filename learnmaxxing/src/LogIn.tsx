@@ -1,5 +1,5 @@
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import React from 'react';
 import { Brain } from 'lucide-react';
@@ -15,6 +15,7 @@ function LogIn({ onLogin}:LogInProps){
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleSubmit = async (e:React.FormEvent) => {
         e.preventDefault();
@@ -30,8 +31,9 @@ function LogIn({ onLogin}:LogInProps){
             await apiService.login(username, password);
             onLogin({ username, password });
             
-            // Navigate to main app after successful login
-            navigate('/groups');
+            // Navigate to the intended page or groups as default
+            const from = location.state?.from?.pathname || '/groups';
+            navigate(from, { replace: true });
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Login failed');
         } finally {
