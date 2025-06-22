@@ -400,7 +400,7 @@ app.post('/api/topics/failure-percentage', async (c) => {
   return c.json(result);
 });
 
-// Catch-all handler for SPA routing - return 200 with a message to let frontend handle routing
+// Catch-all handler for SPA routing - redirect to root
 app.get('*', async (c) => {
   const path = new URL(c.req.url).pathname;
   
@@ -409,11 +409,8 @@ app.get('*', async (c) => {
     return c.notFound();
   }
   
-  // For all other routes in a SPA, return success and let frontend handle routing
-  // This prevents 404 errors on page refresh
-  return c.text('SPA Route - Frontend will handle routing', 200, {
-    'Content-Type': 'text/plain'
-  });
+  // For all other routes in a SPA, redirect to root
+  return c.redirect('/', 302);
 });
 
 // Add a not found handler for API routes only
@@ -425,10 +422,8 @@ app.notFound((c) => {
     return c.json({ error: 'Not found' }, 404);
   }
   
-  // For non-API routes, return success (SPA will handle)
-  return c.text('SPA Route - Frontend will handle routing', 200, {
-    'Content-Type': 'text/plain'
-  });
+  // For non-API routes, redirect to root (SPA will handle)
+  return c.redirect('/', 302);
 });
 
 // export type AppRouter = typeof app;
