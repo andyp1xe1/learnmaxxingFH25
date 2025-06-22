@@ -91,7 +91,7 @@ function calculateNewInterval(currentInterval: number, repetitionCount: number, 
 /**
  * Get questions that are due for review
  * @param questions Array of questions with SM2 data
- * @param userId User ID for filtering
+ * @param userId User ID for filtering (not used in this implementation)
  * @returns Questions due for review
  */
 export function getQuestionsDueForReview(questions: SM2Question[], userId: number): SM2Question[] {
