@@ -31,6 +31,7 @@ export interface UserQuiz {
   quiz_id: number;
   started_at?: string;
   completed_at?: string;
+  percentage_completed: number; // Percentage completed (0.0 to 100.0)
 }
 
 export interface NewUserQuiz {
@@ -38,6 +39,7 @@ export interface NewUserQuiz {
   quiz_id: number;
   started_at?: string;
   completed_at?: string;
+  percentage_completed?: number; // Optional for creation, defaults to 0.0
 }
 
 export interface Reference {

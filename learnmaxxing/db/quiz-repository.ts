@@ -36,6 +36,32 @@ export class QuizRepository extends BaseRepository {
   }
 
   /**
+   * Get all quizzes with percentage completion for a specific user
+   */
+  async findAllWithProgress(userId: number): Promise<(Quiz & { percentage_completed: number })[]> {
+    const query = `
+      SELECT q.*, COALESCE(uq.percentage_completed, 0.0) as percentage_completed
+      FROM quiz q
+      LEFT JOIN user_quiz uq ON q.id = uq.quiz_id AND uq.user_id = ?
+      ORDER BY q.created_at DESC
+    `;
+    return this.findMany<Quiz & { percentage_completed: number }>(query, [userId]);
+  }
+
+  /**
+   * Find quiz by ID with percentage completion for a specific user
+   */
+  async findByIdWithProgress(id: number, userId: number): Promise<(Quiz & { percentage_completed: number }) | null> {
+    const query = `
+      SELECT q.*, COALESCE(uq.percentage_completed, 0.0) as percentage_completed
+      FROM quiz q
+      LEFT JOIN user_quiz uq ON q.id = uq.quiz_id AND uq.user_id = ?
+      WHERE q.id = ?
+    `;
+    return this.findOne<Quiz & { percentage_completed: number }>(query, [userId, id]);
+  }
+
+  /**
    * Search quizzes by title
    */
   async findByTitle(title: string): Promise<Quiz | null> {

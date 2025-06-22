@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS user_quiz (
   quiz_id INTEGER NOT NULL,
   started_at TIMESTAMP,
   completed_at TIMESTAMP,
+  percentage_completed REAL DEFAULT 0.0, -- Percentage completed (0.0 to 100.0)
   FOREIGN KEY (user_id) REFERENCES user(id),
   FOREIGN KEY (quiz_id) REFERENCES quiz(id),
   UNIQUE(user_id, quiz_id)

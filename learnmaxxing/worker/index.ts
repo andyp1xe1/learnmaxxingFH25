@@ -137,6 +137,119 @@ app.get('/api/quizzes', async (c) => {
   return c.json(quizzes);
 })
 
+// Get quizzes with progress for a specific user
+app.get('/api/quizzes/with-progress', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const userId = parseInt(c.req.query('user_id') || '0');
+  
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  try {
+    const quizzes = await repos.quizzes.findAllWithProgress(userId);
+    return c.json(quizzes);
+  } catch (error) {
+    console.error('Error fetching quizzes with progress:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+})
+
+// Get specific quiz with progress for a user
+app.get('/api/quizzes/:id/with-progress', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const quizId = parseInt(c.req.param('id'));
+  const userId = parseInt(c.req.query('user_id') || '0');
+  
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  try {
+    const quiz = await repos.quizzes.findByIdWithProgress(quizId, userId);
+    if (!quiz) {
+      return c.json({ error: "Quiz not found" }, 404);
+    }
+    return c.json(quiz);
+  } catch (error) {
+    console.error('Error fetching quiz with progress:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+})
+
+// Update quiz completion percentage
+app.post('/api/quizzes/:id/update-progress', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const quizId = parseInt(c.req.param('id'));
+  const body = await c.req.json();
+  
+  if (!body.user_id || body.percentage === undefined) {
+    return c.json({ error: "user_id and percentage are required" }, 400);
+  }
+
+  const userId = parseInt(body.user_id);
+  const percentage = parseFloat(body.percentage);
+
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+    return c.json({ error: "Percentage must be a number between 0 and 100" }, 400);
+  }
+
+  try {
+    const success = await repos.userQuizzes.updatePercentage(userId, quizId, percentage);
+    if (!success) {
+      return c.json({ error: "Failed to update progress" }, 500);
+    }
+
+    // Get updated quiz with progress
+    const quiz = await repos.quizzes.findByIdWithProgress(quizId, userId);
+    
+    return c.json({
+      message: "Progress updated successfully",
+      data: {
+        quiz_id: quizId,
+        user_id: userId,
+        percentage_completed: percentage,
+        quiz: quiz
+      }
+    });
+  } catch (error) {
+    console.error('Error updating quiz progress:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+})
+
+// Get user's quiz progress
+app.get('/api/users/:id/quiz-progress', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const userId = parseInt(c.req.param('id'));
+  
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  try {
+    const userQuizzes = await repos.userQuizzes.findByUserId(userId);
+    const quizzes = await repos.quizzes.findAllWithProgress(userId);
+    
+    return c.json({
+      data: {
+        user_id: userId,
+        quizzes: quizzes,
+        total_quizzes: quizzes.length,
+        completed_quizzes: userQuizzes.filter(uq => uq.percentage_completed === 100).length,
+        in_progress_quizzes: userQuizzes.filter(uq => uq.percentage_completed > 0 && uq.percentage_completed < 100).length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user quiz progress:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+})
+
 // Protected quiz management endpoints
 app.post('/api/protected/quizzes', async (c) => {
   const repos = createRepositories(c.env.DB);
