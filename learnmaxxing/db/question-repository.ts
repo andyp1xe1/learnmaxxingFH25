@@ -237,4 +237,76 @@ export class QuestionRepository extends BaseRepository {
       next_review_date: q.next_review_date
     }));
   }
+
+  /**
+   * Get questions due for review for a specific user and quiz
+   */
+  async getQuestionsDueForReviewByQuiz(userId: number, quizId: number): Promise<SM2Question[]> {
+    const now = new Date().toISOString();
+    
+    const questions = await this.findMany<any>(`
+      SELECT DISTINCT q.id, q.ef, q.interval, q.repetition_count, q.next_review_date
+      FROM question q
+      LEFT JOIN user_question_performance uqp ON q.id = uqp.question_id AND uqp.user_id = ?
+      WHERE q.quiz_id = ? AND (q.next_review_date IS NULL OR q.next_review_date <= ?)
+      ORDER BY q.next_review_date ASC NULLS FIRST
+    `, [userId, quizId, now]);
+    
+    return questions.map(q => ({
+      id: q.id,
+      ef: q.ef || 2.5,
+      interval: q.interval || 0,
+      repetition_count: q.repetition_count || 0,
+      next_review_date: q.next_review_date
+    }));
+  }
+
+  /**
+   * Get overdue questions for a specific user and quiz
+   */
+  async getOverdueQuestionsByQuiz(userId: number, quizId: number): Promise<SM2Question[]> {
+    const now = new Date().toISOString();
+    
+    const questions = await this.findMany<any>(`
+      SELECT DISTINCT q.id, q.ef, q.interval, q.repetition_count, q.next_review_date
+      FROM question q
+      LEFT JOIN user_question_performance uqp ON q.id = uqp.question_id AND uqp.user_id = ?
+      WHERE q.quiz_id = ? AND q.next_review_date IS NOT NULL AND q.next_review_date < ?
+      ORDER BY q.next_review_date ASC
+    `, [userId, quizId, now]);
+    
+    return questions.map(q => ({
+      id: q.id,
+      ef: q.ef || 2.5,
+      interval: q.interval || 0,
+      repetition_count: q.repetition_count || 0,
+      next_review_date: q.next_review_date
+    }));
+  }
+
+  /**
+   * Get questions due today for a specific user and quiz
+   */
+  async getQuestionsDueTodayByQuiz(userId: number, quizId: number): Promise<SM2Question[]> {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const tomorrowStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+    
+    const questions = await this.findMany<any>(`
+      SELECT DISTINCT q.id, q.ef, q.interval, q.repetition_count, q.next_review_date
+      FROM question q
+      LEFT JOIN user_question_performance uqp ON q.id = uqp.question_id AND uqp.user_id = ?
+      WHERE q.quiz_id = ? AND (q.next_review_date IS NULL 
+         OR (q.next_review_date >= ? AND q.next_review_date < ?))
+      ORDER BY q.next_review_date ASC NULLS FIRST
+    `, [userId, quizId, todayStart, tomorrowStart]);
+    
+    return questions.map(q => ({
+      id: q.id,
+      ef: q.ef || 2.5,
+      interval: q.interval || 0,
+      repetition_count: q.repetition_count || 0,
+      next_review_date: q.next_review_date
+    }));
+  }
 }

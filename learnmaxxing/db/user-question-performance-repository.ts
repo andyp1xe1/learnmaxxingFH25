@@ -202,4 +202,65 @@ export class UserQuestionPerformanceRepository extends BaseRepository {
       [userId, cutoffDate.toISOString()]
     );
   }
+
+  /**
+   * Get performance statistics for a specific module/quiz
+   */
+  async getModuleStats(userId: number, quizId: number): Promise<{
+    total_reviews: number;
+    hard_count: number;
+    ok_count: number;
+    easy_count: number;
+    success_rate: number;
+    questions_reviewed: number;
+    total_questions: number;
+  }> {
+    const result = await this.findOne<{
+      total_reviews: number;
+      hard_count: number;
+      ok_count: number;
+      easy_count: number;
+      questions_reviewed: number;
+    }>(`
+      SELECT 
+        COUNT(*) as total_reviews,
+        SUM(CASE WHEN quality = 1 THEN 1 ELSE 0 END) as hard_count,
+        SUM(CASE WHEN quality = 3 THEN 1 ELSE 0 END) as ok_count,
+        SUM(CASE WHEN quality = 5 THEN 1 ELSE 0 END) as easy_count,
+        COUNT(DISTINCT uqp.question_id) as questions_reviewed
+      FROM user_question_performance uqp
+      JOIN question q ON uqp.question_id = q.id
+      WHERE uqp.user_id = ? AND q.quiz_id = ?
+    `, [userId, quizId]);
+
+    // Get total questions in the quiz
+    const totalQuestionsResult = await this.findOne<{ total_questions: number }>(
+      "SELECT COUNT(*) as total_questions FROM question WHERE quiz_id = ?",
+      [quizId]
+    );
+
+    const total_questions = totalQuestionsResult?.total_questions || 0;
+
+    if (!result) {
+      return {
+        total_reviews: 0,
+        hard_count: 0,
+        ok_count: 0,
+        easy_count: 0,
+        success_rate: 0,
+        questions_reviewed: 0,
+        total_questions
+      };
+    }
+
+    const success_rate = result.total_reviews > 0 
+      ? ((result.ok_count + result.easy_count) / result.total_reviews) * 100 
+      : 0;
+
+    return {
+      ...result,
+      success_rate: Math.round(success_rate * 100) / 100, // Round to 2 decimal places
+      total_questions
+    };
+  }
 } 

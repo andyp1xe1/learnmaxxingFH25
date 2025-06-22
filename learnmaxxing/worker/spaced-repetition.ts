@@ -316,4 +316,146 @@ app.post('/batch-update', async (c) => {
   }
 });
 
+/**
+ * Get questions due for review for a specific module/quiz
+ * GET /api/spaced-repetition/module-reviews?user_id=123&quiz_id=456
+ */
+app.get('/module-reviews', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const userId = parseInt(c.req.query('user_id') || '0');
+  const quizId = parseInt(c.req.query('quiz_id') || '0');
+  
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  if (!quizId || quizId <= 0) {
+    return c.json({ error: "Valid quiz_id is required" }, 400);
+  }
+
+  try {
+    const dueQuestions = await repos.questions.getQuestionsDueForReviewByQuiz(userId, quizId);
+    
+    return c.json({
+      data: {
+        quiz_id: quizId,
+        due_questions: dueQuestions,
+        count: dueQuestions.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting module due questions:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+/**
+ * Get overdue questions for a specific module/quiz
+ * GET /api/spaced-repetition/module-overdue?user_id=123&quiz_id=456
+ */
+app.get('/module-overdue', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const userId = parseInt(c.req.query('user_id') || '0');
+  const quizId = parseInt(c.req.query('quiz_id') || '0');
+  
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  if (!quizId || quizId <= 0) {
+    return c.json({ error: "Valid quiz_id is required" }, 400);
+  }
+
+  try {
+    const overdueQuestions = await repos.questions.getOverdueQuestionsByQuiz(userId, quizId);
+    
+    return c.json({
+      data: {
+        quiz_id: quizId,
+        overdue_questions: overdueQuestions,
+        count: overdueQuestions.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting module overdue questions:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+/**
+ * Get questions due today for a specific module/quiz
+ * GET /api/spaced-repetition/module-due-today?user_id=123&quiz_id=456
+ */
+app.get('/module-due-today', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const userId = parseInt(c.req.query('user_id') || '0');
+  const quizId = parseInt(c.req.query('quiz_id') || '0');
+  
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  if (!quizId || quizId <= 0) {
+    return c.json({ error: "Valid quiz_id is required" }, 400);
+  }
+
+  try {
+    const todayQuestions = await repos.questions.getQuestionsDueTodayByQuiz(userId, quizId);
+    
+    return c.json({
+      data: {
+        quiz_id: quizId,
+        today_questions: todayQuestions,
+        count: todayQuestions.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting module today\'s questions:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+/**
+ * Get module statistics
+ * GET /api/spaced-repetition/module-stats?user_id=123&quiz_id=456
+ */
+app.get('/module-stats', async (c) => {
+  const repos = createRepositories(c.env.DB);
+  const userId = parseInt(c.req.query('user_id') || '0');
+  const quizId = parseInt(c.req.query('quiz_id') || '0');
+  
+  if (!userId || userId <= 0) {
+    return c.json({ error: "Valid user_id is required" }, 400);
+  }
+
+  if (!quizId || quizId <= 0) {
+    return c.json({ error: "Valid quiz_id is required" }, 400);
+  }
+
+  try {
+    const moduleStats = await repos.userQuestionPerformance.getModuleStats(userId, quizId);
+    const dueQuestions = await repos.questions.getQuestionsDueForReviewByQuiz(userId, quizId);
+    const overdueQuestions = await repos.questions.getOverdueQuestionsByQuiz(userId, quizId);
+    const todayQuestions = await repos.questions.getQuestionsDueTodayByQuiz(userId, quizId);
+    
+    return c.json({
+      data: {
+        quiz_id: quizId,
+        module_stats: moduleStats,
+        due_count: dueQuestions.length,
+        overdue_count: overdueQuestions.length,
+        today_count: todayQuestions.length,
+        total_due: dueQuestions.length + overdueQuestions.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting module stats:', error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
 export default app; 
