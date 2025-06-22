@@ -76,15 +76,10 @@ function QuizGenerator() {
                             <p>{q.question}</p>
 
                             <div className="answer-options">
-                                <p className={q.correctAnswer === 'A' ? 'correct-answer' : ''}>
-                                    A: {q.answerOptions.A}
-                                </p>
-                                <p className={q.correctAnswer === 'B' ? 'correct-answer' : ''}>
-                                    B: {q.answerOptions.B}
-                                </p>
-                                <p className={q.correctAnswer === 'C' ? 'correct-answer' : ''}>
-                                    C: {q.answerOptions.C}
-                                </p>
+                                <p>A: {q.answerOptions.A}</p>
+                                <p>B: {q.answerOptions.B}</p>
+                                <p>C: {q.answerOptions.C}</p>
+                                <p><strong>Correct Answer: {q.correctAnswer}</strong></p>
                             </div>
 
                             <div className="source">

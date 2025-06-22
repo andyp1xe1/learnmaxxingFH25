@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { apiService } from './services/api';
 import type { AssessmentResult } from './services/api';
-import { failedQuizzesService } from './services/failedQuizzesService';
 
 interface QuestionResult {
     questionId: number;
@@ -35,37 +34,8 @@ function AssessmentResults(){
                     
                     setQuizResults(results);
                     
-                    // Store failed quizzes in localStorage
-                    const failedTopics = results
-                        .filter(result => result.failurePercentage > 30) // Consider failed if >30% failure rate
-                        .map(result => {
-                            // The API groups questions by topicId, but we need the actual quiz ID
-                            // For generated questions, the topicId is usually 1, but we need to find the actual quiz
-                            // Let's use the first failed question's ID as a reference to find the quiz
-                            const failedQuestions = location.state.questionResults.filter((qr: QuestionResult) => !qr.success);
-                            const firstFailedQuestionId = failedQuestions.length > 0 ? failedQuestions[0].questionId : 1;
-                            
-                            // For now, let's assume the quiz ID is the same as the topic ID
-                            // In a real implementation, we'd need to query the database to get the actual quiz ID
-                            const quizId = 1; // This should be the actual quiz ID from the database
-                            
-                            return {
-                                quizId: quizId,
-                                quizName: result.topic,
-                                score: Math.round(100 - result.failurePercentage),
-                                timestamp: new Date().toISOString(),
-                                isGenerated: true
-                            };
-                        });
-                    
-                    console.log('🔍 AssessmentResults: Failed topics to store:', failedTopics);
-                    
-                    if (failedTopics.length > 0) {
-                        failedQuizzesService.addFailedQuizzes(failedTopics);
-                        console.log('✅ AssessmentResults: Stored failed quizzes in localStorage');
-                    } else {
-                        console.log('📦 AssessmentResults: No failed topics to store');
-                    }
+                    // Remove the failed quiz storage logic - we don't want to store failed quizzes from assessment results
+                    console.log('📦 AssessmentResults: Results processed without storing failed quizzes');
                 } else {
                     // Fallback to hardcoded data if no results provided
                     console.log('No question results provided, using fallback data');
@@ -449,32 +419,11 @@ function AssessmentResults(){
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
             <button onClick={() => {
-                // Get failed topics from original question results
-                const failedTopics = location.state?.questionResults 
-                    ? Array.from(new Set(
-                        location.state.questionResults
-                            .filter((result: QuestionResult) => !result.success)
-                            .map((result: QuestionResult) => result.topicId)
-                        )).map((topicId: unknown) => ({
-                            topicId: topicId as number,
-                            topicName: quizData.find(item => item.fullTopic.includes((topicId as number).toString()))?.fullTopic || `Topic ${topicId}`,
-                            score: quizData.find(item => item.fullTopic.includes((topicId as number).toString()))?.score || 0
-                        }))
-                    : quizData.filter(item => item.score < 70).map(item => ({
-                        topicId: parseInt(item.fullTopic.match(/\d+/)?.[0] || '1'),
-                        topicName: item.fullTopic,
-                        score: item.score
-                    }));
-
-                navigate('/groups', { 
-                    state: { 
-                        showFailedAssessments: true,
-                        failedTopics: failedTopics
-                    }
-                });
+                // Simply navigate to groups without any failed topics data
+                navigate('/groups');
             }} className="bg-gradient-to-r from-purple-600 to-orange-400 hover:from-purple-700 hover:to-orange-500 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center">
             <BookOpen className="w-5 h-5 mr-2" />
-            Study Weak Areas
+            Continue Learning
             <ArrowRight className="w-5 h-5 ml-2" />
             </button>
         </div>

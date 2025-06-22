@@ -37,7 +37,7 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
 
     // 1. Generate quiz topics (names)
     const topicsResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: `Generate a list of 5 quiz topics based on the following prompt. Return as a JSON array of strings. Prompt: ${prompt}`,
       config: {
         responseMimeType: "application/json",
@@ -73,7 +73,7 @@ quizRouter.post("/generate-topics-and-quizzes", async (c) => {
 
       // 3. Generate quiz questions for this topic
       const quizResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash",
         contents: `Generate multiple-choice quiz questions for the topic "${topic}". Each question should have 3 options (A, B, C) with exactly one correct answer. Include a source reference for each answer. Return as JSON array.`,
         config: {
           responseMimeType: "application/json",
@@ -227,7 +227,7 @@ quizRouter.post("/analyze-content-and-suggest", async (c) => {
 
     // 5. Ask AI to analyze content and suggest topics/groups
     const suggestionResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: `
         Analyze the following contents and organize quiz topics into groups. 
         

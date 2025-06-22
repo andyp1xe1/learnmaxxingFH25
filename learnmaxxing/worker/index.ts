@@ -378,7 +378,7 @@ app.post('/api/topics/failure-percentage', async (c) => {
       const prompt = `The topic "${title}" has a failure rate of ${failurePercentage.toFixed(1)}%. In one or two sentences, what is the most important thing you should focus on to improve? Answer as if speaking directly to the user. Be concise.`;
       try {
         const feedbackResponse = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-2.0-flash",
           contents: prompt,
         });
         feedback = (feedbackResponse.text || "")
