@@ -1,6 +1,6 @@
 import './App.css'
 
-import { BrowserRouter as Router,Routes,Route} from 'react-router-dom';
+import { BrowserRouter as Router,Routes,Route, Navigate} from 'react-router-dom';
 import LandingPage from './LandingPage';
 import LogIn from './LogIn';
 import SignUp from './SignUp';
@@ -9,7 +9,7 @@ import ModeSelection from './ModeSelection';
 import ExamMode from './ExamMode';
 import LearnMode from './LearnMode';
 import AssessmentResults from './AssestmentResults';
-import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 type Credentials = {
   username: string;
@@ -26,22 +26,42 @@ function App() {
   };
 
   return (
-    <AuthProvider>
-      <div>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<LogIn onLogin={handleLogin} />} />
-            <Route path="/signup" element={<SignUp onSignup={handleSignup} />} />
-            <Route path="/modeselection" element={<ModeSelection/>} />
-            <Route path="/exammode" element={<ExamMode />} />
-            <Route path="/learnmode" element={<LearnMode />} />
-            <Route path="/" element={<LandingPage />}/>
-            <Route path="/groups" element={<GroupsPage />} />
-            <Route path="/assestmentresults" element={<AssessmentResults />}/>
-          </Routes>
-        </Router>
-      </div>
-    </AuthProvider>
+    <div>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LogIn onLogin={handleLogin} />} />
+          <Route path="/signup" element={<SignUp onSignup={handleSignup} />} />
+          <Route path="/" element={<LandingPage />}/>
+          <Route path="/groups" element={
+            <ProtectedRoute>
+              <GroupsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/modeselection" element={
+            <ProtectedRoute>
+              <ModeSelection/>
+            </ProtectedRoute>
+          } />
+          <Route path="/exammode" element={
+            <ProtectedRoute>
+              <ExamMode />
+            </ProtectedRoute>
+          } />
+          <Route path="/learnmode" element={
+            <ProtectedRoute>
+              <LearnMode />
+            </ProtectedRoute>
+          } />
+          <Route path="/assestmentresults" element={
+            <ProtectedRoute>
+              <AssessmentResults />
+            </ProtectedRoute>
+          } />
+          {/* Catch-all route: redirect any unmatched routes to /groups */}
+          <Route path="*" element={<Navigate to="/groups" replace />} />
+        </Routes>
+      </Router>
+    </div>
   )
 }
 

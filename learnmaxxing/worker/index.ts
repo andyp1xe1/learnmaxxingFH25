@@ -4,12 +4,22 @@ import type { D1Database } from "@cloudflare/workers-types"
 import { createRepositories } from "../db";
 import { GoogleGenAI } from "@google/genai";
 import quizRouter from "./quiz";
+import { cors } from 'hono/cors';
 export type WorkerBindings = {
   DB: D1Database
   GEMINI_API_KEY: string;
 }
 
 const app = new Hono<{ Bindings: WorkerBindings }>()
+
+// Enable CORS for development
+app.use('/*', cors({
+  origin: ['http://localhost:5173', 'http://localhost:4173'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}))
+
 // Mount the quiz router
 app.route("/api/quiz", quizRouter);
 
@@ -271,6 +281,37 @@ app.post('/api/topics/failure-percentage', async (c) => {
 
   return c.json(result);
 });
+// Catch-all handler for SPA routing - return 200 with a message to let frontend handle routing
+app.get('*', async (c) => {
+  const path = new URL(c.req.url).pathname;
+  
+  // Don't handle API routes
+  if (path.startsWith('/api/')) {
+    return c.notFound();
+  }
+  
+  // For all other routes in a SPA, return success and let frontend handle routing
+  // This prevents 404 errors on page refresh
+  return c.text('SPA Route - Frontend will handle routing', 200, {
+    'Content-Type': 'text/plain'
+  });
+});
+
+// Add a not found handler for API routes only
+app.notFound((c) => {
+  const path = new URL(c.req.url).pathname;
+  
+  // If it's an API route, return proper 404
+  if (path.startsWith('/api/')) {
+    return c.json({ error: 'Not found' }, 404);
+  }
+  
+  // For non-API routes, return success (SPA will handle)
+  return c.text('SPA Route - Frontend will handle routing', 200, {
+    'Content-Type': 'text/plain'
+  });
+});
+
 // export type AppRouter = typeof app;
 export default {
   fetch: app.fetch

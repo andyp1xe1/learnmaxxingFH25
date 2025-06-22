@@ -15,4 +15,16 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: './index.html',
+      },
+    },
+  },
+  // Enable history API fallback for SPA routing
+  preview: {
+    port: 4173,
+    host: true,
+  },
 })

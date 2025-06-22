@@ -48,12 +48,15 @@ export interface Group {
 
 class ApiService {
   private baseUrl: string;
-  private authToken: string | null = null;
+  private credentials: { username: string; password: string } | null = null;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    // Load stored auth token
-    this.authToken = localStorage.getItem('authToken');
+    // Load stored credentials
+    const storedCreds = localStorage.getItem('userCredentials');
+    if (storedCreds) {
+      this.credentials = JSON.parse(storedCreds);
+    }
   }
 
   private async request<T>(
@@ -73,10 +76,11 @@ class ApiService {
     };
 
     // Add basic auth header if we have credentials
-    if (this.authToken) {
+    if (this.credentials) {
+      const authToken = btoa(`${this.credentials.username}:${this.credentials.password}`);
       config.headers = {
         ...config.headers,
-        'Authorization': `Basic ${this.authToken}`,
+        'Authorization': `Basic ${authToken}`,
       };
     }
 
@@ -119,17 +123,16 @@ class ApiService {
     });
 
     // Store credentials for basic auth
-    const credentials = btoa(`${username}:${password}`);
-    this.authToken = credentials;
-    localStorage.setItem('authToken', credentials);
+    this.credentials = { username, password };
+    localStorage.setItem('userCredentials', JSON.stringify(this.credentials));
     localStorage.setItem('user', JSON.stringify(result.user));
 
     return result;
   }
 
   logout(): void {
-    this.authToken = null;
-    localStorage.removeItem('authToken');
+    this.credentials = null;
+    localStorage.removeItem('userCredentials');
     localStorage.removeItem('user');
   }
 
@@ -139,7 +142,7 @@ class ApiService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.authToken;
+    return !!this.credentials;
   }
 
   // Protected user endpoints
