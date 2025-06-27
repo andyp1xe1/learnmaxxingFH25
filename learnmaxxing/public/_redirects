@@ -1,3 +1,0 @@
-# Handle SPA routing - redirect all non-asset requests to index.html
-/api/* 200
-/*    /index.html   200

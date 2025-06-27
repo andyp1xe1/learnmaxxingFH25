@@ -1,0 +1,63 @@
+CREATE TABLE `document` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`title` text,
+	`content` blob NOT NULL,
+	`createdAt` text DEFAULT 'CURRENT_TIMESTAMP'
+);
+
+CREATE TABLE `group` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`createdAt` text DEFAULT 'CURRENT_TIMESTAMP'
+);
+
+CREATE UNIQUE INDEX `group_name_unique` ON `group` (`name`);
+CREATE TABLE `question` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`quizId` integer NOT NULL,
+	`questionJson` text NOT NULL,
+	`explanation` text,
+	FOREIGN KEY (`quizId`) REFERENCES `topic`(`id`) ON UPDATE no action ON DELETE no action
+);
+
+CREATE INDEX `idx_question_quiz_id` ON `question` (`quizId`);
+CREATE TABLE `reference_question` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`questionId` integer NOT NULL,
+	`documentId` integer NOT NULL,
+	`quote` text NOT NULL,
+	FOREIGN KEY (`questionId`) REFERENCES `question`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`documentId`) REFERENCES `document`(`id`) ON UPDATE no action ON DELETE no action
+);
+
+CREATE INDEX `idx_reference_question_question_id` ON `reference_question` (`questionId`);
+CREATE INDEX `idx_reference_question_document_id` ON `reference_question` (`documentId`);
+CREATE TABLE `topic` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`title` text NOT NULL,
+	`description` text,
+	`createdAt` text DEFAULT 'CURRENT_TIMESTAMP',
+	`groupId` integer NOT NULL,
+	FOREIGN KEY (`groupId`) REFERENCES `group`(`id`) ON UPDATE no action ON DELETE cascade
+);
+
+CREATE TABLE `user` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`username` text NOT NULL,
+	`password` text,
+	`createdAt` text DEFAULT 'CURRENT_TIMESTAMP'
+);
+
+CREATE UNIQUE INDEX `user_username_unique` ON `user` (`username`);
+CREATE TABLE `user_group` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`userId` integer NOT NULL,
+	`groupId` integer NOT NULL,
+	`createdAt` text DEFAULT 'CURRENT_TIMESTAMP',
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`groupId`) REFERENCES `group`(`id`) ON UPDATE no action ON DELETE no action
+);
+
+CREATE INDEX `idx_user_group_user_id` ON `user_group` (`userId`);
+CREATE INDEX `idx_user_group_group_id` ON `user_group` (`groupId`);
+CREATE UNIQUE INDEX `uniq_user_group` ON `user_group` (`userId`,`groupId`);
